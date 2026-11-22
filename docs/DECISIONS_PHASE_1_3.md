@@ -46,5 +46,7 @@ Local-only অ্যাপের CASA-ছাড় আছে কি না (S26 
 | 028 | Mobile background sync = periodic fetch; push relay নেই (ADR-007) | G2 | — |
 | 029 | **Apple (iOS ও macOS) সম্পূর্ণ বাদ** — CI/release কোথাও নেই; Phase ১০-এ, আপনি চাইলে | ব্যবহারকারীর নির্দেশ + G3 | আগে Android+Windows, তারপর Linux (ঐচ্ছিক checkbox) |
 | 030 | **Build-গেট:** `build-apps` = `check` (analyze+test) সফল হলেই build; ত্রুটিযুক্ত কোড build হয় না | ব্যবহারকারীর নির্দেশ | infos fatal নয়; errors+warnings fatal |
-| 031 | **Auto-format:** `.dart` push-এ `format` workflow `dart format` চালিয়ে commit ফেরত পাঠায় (`[skip ci]`, bot-actor বাদ — লুপ নেই) | ব্যবহারকারীর নির্দেশ | ফলে push-এর পর `git pull` লাগতে পারে |
+| 031 | **Auto-format (সংশোধিত, ADR-033):** প্রতিটি push-এ `format` workflow `dart format` চালিয়ে commit ফেরত পাঠায় (`[skip ci]`, bot-actor বাদ — লুপ নেই) | ব্যবহারকারীর নির্দেশ | ফলে push-এর পর `git pull` লাগতে পারে |
 | 032 | CI স্ক্রিপ্ট সবসময় `bash tools/x.sh` দিয়ে চালানো (executable-bit ভরসা নয়); ZIP `zip` কমান্ডে | প্রথম CI-ব্যর্থতার শিক্ষা | — |
+| 033 | **Workflow মাত্র ২টি:** `format` (প্রতিটি push-এ নিজে, কোনো path/branch ফিল্টার নেই) ও `ci` (হাতে: check→build, ঐচ্ছিক Linux/extra/draft-release)। আলাদা `ci-core`/`build-apps`/`release` বাতিল | ব্যবহারকারীর নির্দেশ; কম বিভ্রান্তি | প্রথম `format` না চলার কারণ: ফিল্টার ছিল `**.dart` পরিবর্তনে, কিন্তু v2 push-এ কোনো .dart বদলায়নি (সম্ভাব্য; branch-নাম `main` না হলেও চলত না) |
+| 034 | CI-তে `flutter analyze --no-fatal-infos`: error ও **warning** build আটকায়, info আটকায় না | G7 + অকারণ-ব্লকিং এড়ানো | প্রথম আসল ব্যর্থতা: test ফাইলে unused import (warning) |

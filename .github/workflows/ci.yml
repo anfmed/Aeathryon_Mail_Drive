@@ -1,0 +1,208 @@
+name: ci
+# একটিই CI workflow (হাতে চালান: Actions -> ci -> Run workflow)।
+# ধাপ: check (analyze+test) -> সফল হলেই build (Android + Windows)। check-এ ত্রুটি থাকলে build চলে না।
+# ঐচ্ছিক টিক: Linux build · অতিরিক্ত পরীক্ষা (WebDAV live, isolated) · draft release। iOS/macOS: বাদ।
+on:
+  workflow_dispatch:
+    inputs:
+      include_linux:
+        description: "Linux-ও build করুন"
+        type: boolean
+        default: false
+      run_extra_checks:
+        description: "অতিরিক্ত পরীক্ষা চালান (WebDAV live, mail_imap) — ব্যর্থ হলেও build আটকায় না"
+        type: boolean
+        default: false
+      publish_draft_release:
+        description: "build শেষে unsigned DRAFT release বানান"
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  check:
+    name: check (analyze + test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Flutter (official repo)
+        shell: bash
+        run: bash tools/install_flutter.sh
+      - name: Pure-Dart packages - analyze + test
+        shell: bash
+        run: bash tools/ci_core.sh
+      - name: SQL schema validation
+        run: python3 tools/validate_schema.py
+      - name: Flutter package + apps - analyze + test
+        shell: bash
+        run: |
+          set -e
+          for d in packages/aethryon_design apps/drive_app apps/mail_app; do
+            echo "=== $d ==="
+            (cd "$d" && flutter pub get && flutter analyze --no-fatal-infos && { [ ! -d test ] || flutter test; })
+          done
+
+  plan:
+    needs: check
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+    steps:
+      - id: m
+        shell: bash
+        env:
+          INCLUDE_LINUX: ${{ inputs.include_linux }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          targets = [
+            {"target": "android", "os": "ubuntu-latest",  "platform": "android", "cmd": "flutter build apk --release --split-per-abi"},
+            {"target": "windows", "os": "windows-latest", "platform": "windows", "cmd": "flutter build windows --release"},
+          ]
+          if os.environ.get("INCLUDE_LINUX") == "true":
+            targets.append({"target": "linux", "os": "ubuntu-latest", "platform": "linux", "cmd": "flutter build linux --release"})
+          include = [dict(t, app=a) for a in ("drive_app", "mail_app") for t in targets]
+          print("matrix=" + json.dumps({"include": include}))
+          PY
+
+  build:
+    name: ${{ matrix.app }} / ${{ matrix.target }}
+    needs: plan
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Flutter (official repo)
+        shell: bash
+        run: bash tools/install_flutter.sh
+      - name: Linux build dependencies
+        if: matrix.target == 'linux'
+        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+      - name: Enable desktop platform
+        if: matrix.target != 'android'
+        shell: bash
+        run: flutter config --enable-${{ matrix.platform }}-desktop || true
+      - name: Android licenses
+        if: matrix.target == 'android'
+        shell: bash
+        run: yes | flutter doctor --android-licenses || true
+      - name: Generate platform folder (not committed yet)
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          flutter create --platforms=${{ matrix.platform }} --project-name ${{ matrix.app }} "$tmp/gen"
+          cp -R "$tmp/gen/${{ matrix.platform }}" "apps/${{ matrix.app }}/"
+      - name: Build
+        shell: bash
+        working-directory: apps/${{ matrix.app }}
+        run: |
+          flutter pub get
+          ${{ matrix.cmd }}
+      - name: Package (unsigned)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cd apps/${{ matrix.app }}
+          case "${{ matrix.target }}" in
+            android) for f in build/app/outputs/flutter-apk/*-release.apk; do cp "$f" "../../dist/${{ matrix.app }}-$(basename "$f" | sed 's/^app-//')"; done ;;
+            linux)   tar -czf "../../dist/${{ matrix.app }}-linux-x64.tar.gz" -C build/linux/x64/release/bundle . ;;
+            windows) powershell -Command "Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath ../../dist/${{ matrix.app }}-windows-x64.zip" ;;
+          esac
+          ls -l ../../dist
+          echo "## ${{ matrix.app }} / ${{ matrix.target }} (size in KB)" >> "$GITHUB_STEP_SUMMARY"
+          du -k ../../dist/* >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app }}-${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+
+  draft-release:
+    if: inputs.publish_draft_release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: dist
+      - name: Checksums + DRAFT release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd dist
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          tag="preview-$(date +%Y%m%d-%H%M)"
+          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --draft --title "$tag (UNSIGNED preview)" \
+             --notes "Unsigned preview build. Not for store submission." *
+
+  webdav-live:
+    name: extra - WebDAV live (local wsgidav)
+    if: inputs.run_extra_checks
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Flutter (official repo)
+        shell: bash
+        run: bash tools/install_flutter.sh
+      - name: Start a local WebDAV server (fails early, with its log, if it does not answer)
+        shell: bash
+        run: |
+          pip install wsgidav cheroot
+          mkdir -p /tmp/dav
+          nohup wsgidav --host=127.0.0.1 --port=8081 --root=/tmp/dav --auth=anonymous > /tmp/wsgidav.log 2>&1 &
+          ok=0
+          for i in $(seq 1 15); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" -X PROPFIND -H "Depth: 0" http://127.0.0.1:8081/ || true)
+            echo "try $i -> HTTP $code"
+            if [ "$code" = "207" ]; then ok=1; break; fi
+            sleep 1
+          done
+          if [ "$ok" != "1" ]; then echo "=== wsgidav log ==="; cat /tmp/wsgidav.log; exit 1; fi
+      - name: Run live test (expanded output)
+        working-directory: packages/drive_core
+        env:
+          WEBDAV_URL: http://127.0.0.1:8081/
+        run: |
+          dart pub get
+          dart test -r expanded test/integration
+      - name: Server log
+        if: always()
+        run: cat /tmp/wsgidav.log || true
+
+  isolated:
+    name: extra - isolated (mail_imap, secure store)
+    if: inputs.run_extra_checks
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Flutter (official repo)
+        shell: bash
+        run: bash tools/install_flutter.sh
+      - name: mail_imap
+        shell: bash
+        run: |
+          cd packages/mail_imap
+          dart pub get
+          dart analyze
+          dart test
+      - name: secure store wrapper
+        shell: bash
+        run: |
+          cd packages/aethryon_secure_store_flutter
+          flutter pub get
+          flutter analyze --no-fatal-infos

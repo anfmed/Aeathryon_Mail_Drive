@@ -6,7 +6,7 @@
 - `packages/` — shared: `aethryon_capability/net/log/auth/platform/design`; `drive_core`, `mail_core` (pure Dart); isolated: `mail_imap`, `aethryon_secure_store_flutter`
 - `apps/` — `drive_app`, `mail_app` (demo-ডেটায় চলমান UI; platform-ফোল্ডার CI তৈরি করে)
 - `schema/` — Drive ও Mail-এর আলাদা SQL schema (SQLite-এ যাচাইকৃত)
-- `tools/` — CI স্ক্রিপ্ট ও `bench_sqlite.py`; `.github/workflows/` — `format` (auto), `build-apps` (check→build; Android+Windows, Linux ঐচ্ছিক), `ci-core` (ঐচ্ছিক পূর্ণ CI), `release`
+- `tools/` — CI স্ক্রিপ্ট ও `bench_sqlite.py`; `.github/workflows/` — মাত্র ২টি: `format` (প্রতিটি push-এ নিজে) ও `ci` (হাতে: check→build; Android+Windows, ঐচ্ছিক Linux/extra/draft-release)
 - `docs/` — সিদ্ধান্ত, পরিকল্পনা, যাচাই, রিপোর্ট, গাইড; `docs/phase0/` — Phase 0 নথি
 ## নিয়ম
 কোনো secret/keystore/token commit করবেন না। কোনো লাইসেন্স এখনো নির্ধারিত নয় (`NOTICE.md`)।

@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:aethryon_capability/aethryon_capability.dart';
 import 'adapter.dart';
 import 'models.dart';

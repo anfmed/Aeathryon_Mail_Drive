@@ -1,16 +1,17 @@
 # USER_ACTION_CHECKLIST — আপনাকে যা যা করতে হবে (ক্রমানুসারে)
 
 ## A. এখনই (বাধ্যতামূলক, বিনামূল্যে)
-1. ☐ GitHub-এ **public** repository খুলুন (ADR-010)।
-2. ☐ ZIP unzip করুন; `aethryon-repo/`-এর **ভেতরের** ফাইলগুলো repo-র root-এ রাখুন (`.github/`, `apps/`, `packages/` …)। `.github` লুকানো ফোল্ডার — Explorer-এ "Hidden items" চালু করুন। *(আগের ZIP-এর ফাইলগুলো এই ZIP-এর ফাইল দিয়ে overwrite করুন।)*
-3. ☐ একবার push করুন (VS Code → Source Control, বা `git add . && git commit -m "phase 1-5 v2" && git push`)। কোনো key/secret ফাইল যোগ করবেন না।
-4. ☐ push-এর পর GitHub → **Actions** → **`format`** workflow নিজে চলবে (`dart format`)। শেষ হলে যদি সে কোনো বদল commit করে, নিজের কম্পিউটারে `git pull` করে নিন।
-5. ☐ Actions → **`build-apps`** → *Run workflow*। এটি প্রথমে **check** (analyze + test) চালায়:
-   - check-এ **ত্রুটি থাকলে build একেবারেই চলবে না** (আপনার নির্দেশ অনুযায়ী)। তখন check job-এর নাম ও লগের শেষ ~৪০ লাইন আমাকে পাঠান।
-   - check সফল হলে Android ও Windows build হবে (দুই অ্যাপ × দুই platform = ৪ job)।
-   - Linux চাইলে Run workflow-এর সময় "Linux-ও build করুন" টিক দিন। iOS/macOS বাদ।
-6. ☐ (ঐচ্ছিক) **`ci-core`** *Run workflow* — অতিরিক্ত: WebDAV live-test ও isolated (`mail_imap`) job। এগুলো ব্যর্থ হলে build আটকায় না, কিন্তু কোন লাইন ঠিক করতে হবে জানায়।
-7. ☐ build সফল হলে Artifacts থেকে Android APK নামিয়ে ফোনে install করুন (Settings → "Install unknown apps") ও Windows ZIP খুলে `.exe` চালান। মন্তব্য/স্ক্রিনশট পাঠান।
+এখন মাত্র **২টি workflow**: `format` (নিজে চলে) ও `ci` (আপনি হাতে চালান)।
+1. ☐ GitHub-এ **public** repository (ADR-010)।
+2. ☐ ZIP unzip করুন; `aethryon-repo/`-এর **ভেতরের** ফাইলগুলো repo-র root-এ রাখুন, আগের ফাইল overwrite করুন। **পুরোনো workflow ফাইল মুছে দিন:** `.github/workflows/ci-core.yml`, `build-apps.yml`, `release.yml` (এগুলো এখন `ci.yml`-এর ভেতরে)। `.github` লুকানো ফোল্ডার — "Hidden items" চালু করুন।
+3. ☐ একবার push করুন। কোনো key/secret ফাইল যোগ করবেন না।
+4. ☐ push করার সঙ্গে সঙ্গে Actions-এ **`format`** নিজে চলবে (এখন প্রতিটি push-এ, কোনো ফিল্টার ছাড়া)। শেষ হলে বদল থাকলে সে একটি commit ফেরত পাঠায় → নিজের কম্পিউটারে `git pull` করুন।
+   - `format` যদি push ধাপে `403` দিয়ে ব্যর্থ হয়: GitHub → Settings → Actions → General → **Workflow permissions → "Read and write permissions"** → Save।
+5. ☐ Actions → **`ci`** → *Run workflow*। এটি প্রথমে **check** (analyze + test) চালায়:
+   - check-এ **ত্রুটি থাকলে build চলবে না**। তখন ব্যর্থ job-এর নাম ও লগের শেষ ~৪০ লাইন (ত্রুটির লাইনগুলোসহ) আমাকে পাঠান।
+   - সফল হলে Android + Windows build (দুই অ্যাপ × ২ = ৪ job)।
+   - Run workflow-এর সময় ঐচ্ছিক টিক: **Linux-ও build** · **অতিরিক্ত পরীক্ষা** (WebDAV live, mail_imap — ব্যর্থ হলেও build আটকায় না) · **draft release**। iOS/macOS নেই।
+6. ☐ build সফল হলে Artifacts থেকে `*-android` (APK) ও `*-windows` (ZIP) নামিয়ে পরীক্ষা করুন; মন্তব্য/স্ক্রিনশট পাঠান।
 
 ## B. দ্রুত ফোন/PC পরিমাপ (প্রায় ৩০ মিনিট, বিনামূল্যে)
 9. ☐ `docs/MEASUREMENT_PROTOCOL.md` অনুযায়ী আপনার সবচেয়ে দুর্বল Android ফোন ও ৪ GB Windows PC-তে: ঠান্ডা চালু হওয়ার সময়, idle RAM — লিখে পাঠান। এটাই Flutter-সিদ্ধান্তের (ADR-003) চূড়ান্ত পরীক্ষা।

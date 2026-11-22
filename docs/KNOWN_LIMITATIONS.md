@@ -13,3 +13,6 @@
 12. **Provider তথ্য-ঋণ** (Phase ০ §৩) বেশিরভাগ এখনো বাকি; MEGA, Box, Dropbox, pCloud, OneDrive adapter নেই।
 13. **নিরাপত্তা-নিরীক্ষা, accessibility-নিরীক্ষা (screen reader), স্টোর-নীতি পর্যালোচনা** — হয়নি।
 14. GitHub-এ push/Actions চালানো আমি করতে পারি না — আপনার (docs/USER_ACTION_CHECKLIST.md)।
+15. **Flutter stable-এ `package:flutter/material.dart` deprecated** (CI-লগ: "Use package:material_ui/material_ui.dart instead; deprecated after v3.47"). এখন শুধু info — build আটকায় না। `material_ui`-এর API/সংস্করণ আমি যাচাই করিনি, তাই এখনই সরাইনি; Phase ৬-এ যাচাই করে migrate।
+16. **`webdav-live` (ঐচ্ছিক extra-check) প্রথম রানে ২টি টেস্টই ব্যর্থ**; কারণ লগে (কাটা অংশে) দেখা যায়নি। দ্বিতীয় টেস্ট (অনুপস্থিত রিসোর্স → 404) ব্যর্থ হওয়া ইঙ্গিত দেয় সার্ভার সাড়া দেয়নি — কিন্তু এটি **অনুমান**। এখন ধাপটি সার্ভার-সাড়া না দিলে নিজের লগসহ আগেই ব্যর্থ হয়। WebDAV capability `UNVERIFIED`ই থাকছে।
+17. **প্রথম CI-রান থেকে প্রমাণ:** pure-Dart package-গুলো `dart pub get` ও টেস্ট-লোড পর্যন্ত পৌঁছেছে (সমাধানকৃত: xml 7.1.0, http 1.6.0, test 1.33.0) — অর্থাৎ ওখানে compile-ত্রুটি ছিল না। এটি আংশিক প্রমাণ; পুরো `core` job-এর ফল আমি দেখিনি।

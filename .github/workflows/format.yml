@@ -1,10 +1,9 @@
 name: format
-# Push করলে নিজে নিজে চলে: `dart format` চালিয়ে বদলগুলো একটি commit হিসেবে ফেরত পাঠায়।
-# (এই push নতুন workflow চালু করে না — GITHUB_TOKEN-এর নিয়ম — তাই লুপ হয় না।)
+# প্রতিটি push-এ নিজে চলে (কোনো path/branch ফিল্টার নেই): `dart format` চালিয়ে বদল থাকলে commit ফেরত পাঠায়।
+# bot-এর নিজের push নতুন workflow চালু করে না, আর নিচে actor-guard-ও আছে — তাই লুপ হয় না।
 on:
   push:
-    branches: [main]
-    paths: ['**.dart']
+  workflow_dispatch:
 permissions:
   contents: write
 concurrency:
@@ -23,8 +22,8 @@ jobs:
       - name: dart format
         shell: bash
         run: |
-          # সিনট্যাক্স-ত্রুটিযুক্ত ফাইল format হয় না (exit 65) কিন্তু বাকিগুলো হয়; ত্রুটি ধরবে CI-র check ধাপ।
-          dart format packages apps || echo "::warning::some files could not be formatted (syntax errors?) - CI check will show them"
+          # সিনট্যাক্স-ত্রুটিযুক্ত ফাইল format হয় না (exit 65), বাকিগুলো হয়; ত্রুটি ধরবে ci-র check ধাপ।
+          dart format packages apps || echo "::warning::some files could not be formatted (syntax errors?)"
       - name: Commit formatting changes (if any)
         shell: bash
         run: |
@@ -35,5 +34,5 @@ jobs:
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add -A packages apps
             git commit -m "style: dart format [skip ci]"
-            git push
+            git push origin HEAD:${{ github.ref_name }}
           fi
