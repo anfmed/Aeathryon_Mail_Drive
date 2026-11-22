@@ -1,0 +1,12 @@
+name: aethryon_auth
+description: OAuth2 PKCE helpers, token model and token-store interface. No credentials, no network.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+dependencies:
+  aethryon_platform: {path: ../aethryon_platform}
+  http: any
+  crypto: any   # dart-lang package; licence/maintenance to be confirmed by dependency gate (docs/DEPENDENCY_GATE.md)
+dev_dependencies:
+  test: any

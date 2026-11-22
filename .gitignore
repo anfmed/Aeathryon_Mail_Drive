@@ -1,0 +1,17 @@
+build/
+.dart_tool/
+*.iml
+.idea/
+/apps/*/android/
+/apps/*/ios/
+/apps/*/windows/
+/apps/*/linux/
+/apps/*/macos/
+dependency_report.txt
+resolved_packages.txt
+*.keystore
+*.jks
+*.p12
+*.mobileprovision
+key.properties
+.env

@@ -1,0 +1,10 @@
+name: aethryon_secure_store_flutter
+description: "SecureStore backed by flutter_secure_storage (Keychain / Keystore / Credential Manager / libsecret)"
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+dependencies:
+  flutter: {sdk: flutter}
+  aethryon_platform: {path: ../aethryon_platform}
+  flutter_secure_storage: any   # candidate; licence/maintenance via dependency gate. Linux needs libsecret (see docs)

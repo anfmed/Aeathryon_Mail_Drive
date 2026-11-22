@@ -1,0 +1,14 @@
+name: drive_core
+description: Aethryon Drive domain, adapter interface, transfer planning and WebDAV adapter. Pure Dart.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+dependencies:
+  aethryon_capability: {path: ../aethryon_capability}
+  aethryon_net: {path: ../aethryon_net}
+  aethryon_platform: {path: ../aethryon_platform}
+  http: any   # candidate; licence/maintenance via dependency gate
+  xml: any    # candidate; needed for PROPFIND multistatus parsing; licence via dependency gate
+dev_dependencies:
+  test: any

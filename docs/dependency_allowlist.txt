@@ -1,0 +1,7 @@
+- crypto
+- http
+- xml
+- test
+- flutter_test
+- enough_mail
+- flutter_secure_storage

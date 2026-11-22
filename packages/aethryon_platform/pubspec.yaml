@@ -1,0 +1,6 @@
+name: aethryon_platform
+description: Platform abstraction interfaces (implementations live in app shells / native plugins).
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: '>=3.3.0 <4.0.0'

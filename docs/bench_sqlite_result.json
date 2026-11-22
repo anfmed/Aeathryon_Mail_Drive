@@ -1,0 +1,27 @@
+{
+  "sqlite_version": "3.45.1",
+  "mail_insert_500k_s": 3.6,
+  "mail_fts_build_100k_s": 0.3,
+  "P08_inbox_first_page_500k": {
+    "p50_ms": 0.032,
+    "p95_ms": 0.042
+  },
+  "P07_mail_fts_prefix_100k": {
+    "p50_ms": 0.062,
+    "p95_ms": 0.099
+  },
+  "P07_mail_fts_two_terms_100k": {
+    "p50_ms": 0.048,
+    "p95_ms": 0.063
+  },
+  "drive_insert_500k_s": 2.9,
+  "drive_fts_build_500k_s": 1.2,
+  "P07_drive_fts_prefix_500k": {
+    "p50_ms": 0.091,
+    "p95_ms": 0.139
+  },
+  "drive_folder_listing_500_children": {
+    "p50_ms": 0.171,
+    "p95_ms": 0.271
+  }
+}

@@ -1,0 +1,84 @@
+name: release
+# Builds UNSIGNED artifacts for Android / Windows / Linux and attaches them to a DRAFT GitHub release.
+# NOT automated yet: Android/Windows signing, macOS/iOS (blocked on ADR-008, see docs/DECISIONS_PHASE_1_3.md).
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    name: ${{ matrix.app }} / ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [drive_app, mail_app]
+        include:
+          - {target: android, os: ubuntu-latest,  platform: android, cmd: "flutter build apk --release --split-per-abi"}
+          - {target: linux,   os: ubuntu-latest,  platform: linux,   cmd: "flutter build linux --release"}
+          - {target: windows, os: windows-latest, platform: windows, cmd: "flutter build windows --release"}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Flutter (official repo)
+        shell: bash
+        run: tools/install_flutter.sh
+      - name: Linux build dependencies
+        if: matrix.target == 'linux'
+        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+      - name: Android licenses
+        if: matrix.target == 'android'
+        shell: bash
+        run: yes | flutter doctor --android-licenses || true
+      - name: Generate platform folder
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          flutter create --platforms=${{ matrix.platform }} --project-name ${{ matrix.app }} "$tmp/gen"
+          cp -R "$tmp/gen/${{ matrix.platform }}" "apps/${{ matrix.app }}/"
+      - name: Build
+        shell: bash
+        working-directory: apps/${{ matrix.app }}
+        run: |
+          flutter pub get
+          ${{ matrix.cmd }}
+      - name: Package
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cd apps/${{ matrix.app }}
+          case "${{ matrix.target }}" in
+            android) for f in build/app/outputs/flutter-apk/*-release.apk; do cp "$f" "../../dist/${{ matrix.app }}-$(basename "$f" | sed 's/app-//')"; done ;;
+            linux)   tar -czf "../../dist/${{ matrix.app }}-linux-x64.tar.gz" -C build/linux/x64/release/bundle . ;;
+            windows) powershell -Command "Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath ../../dist/${{ matrix.app }}-windows-x64.zip" ;;
+          esac
+          ls -l ../../dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.app }}-${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+  draft-release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dist-*
+          merge-multiple: true
+          path: dist
+      - name: Checksums + DRAFT release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd dist
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          tag="${GITHUB_REF_NAME}"
+          [ "${GITHUB_REF_TYPE}" = "tag" ] || tag="manual-$(date +%Y%m%d-%H%M)"
+          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --draft --title "$tag (UNSIGNED preview)" \
+             --notes "Unsigned preview build. Not for store submission. See docs/STORE_READINESS.md." *

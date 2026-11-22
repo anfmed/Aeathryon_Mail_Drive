@@ -1,0 +1,15 @@
+name: drive_app
+description: "Aethryon Drive app (Phase 4: demo-data UI over the real adapter interface)"
+publish_to: none
+version: 0.2.0+1
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+dependencies:
+  flutter: {sdk: flutter}
+  aethryon_capability: {path: ../../packages/aethryon_capability}
+  aethryon_design: {path: ../../packages/aethryon_design}
+  drive_core: {path: ../../packages/drive_core}
+dev_dependencies:
+  flutter_test: {sdk: flutter}
+flutter:
+  uses-material-design: true

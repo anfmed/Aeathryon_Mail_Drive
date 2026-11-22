@@ -1,0 +1,66 @@
+name: build-apps
+# Unsigned compile/size builds only. Signing & store upload are NOT configured
+# (no secrets, no Apple account yet - see docs/DECISIONS_PHASE_1_3.md ADR-008).
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['apps/**', 'packages/**', '.github/workflows/build-apps.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    name: ${{ matrix.app }} / ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [drive_app, mail_app]
+        include:
+          - {target: android, os: ubuntu-latest,  platform: android, cmd: "flutter build apk --release --split-per-abi"}
+          - {target: linux,   os: ubuntu-latest,  platform: linux,   cmd: "flutter build linux --release"}
+          - {target: windows, os: windows-latest, platform: windows, cmd: "flutter build windows --release"}
+          - {target: macos,   os: macos-latest,   platform: macos,   cmd: "flutter build macos --release"}
+          - {target: ios,     os: macos-latest,   platform: ios,     cmd: "flutter build ios --release --no-codesign"}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Flutter (official repo)
+        shell: bash
+        run: tools/install_flutter.sh
+      - name: Linux build dependencies
+        if: matrix.target == 'linux'
+        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+      - name: Enable desktop platform
+        shell: bash
+        run: flutter config --enable-${{ matrix.platform }}-desktop || true
+      - name: Android licenses
+        if: matrix.target == 'android'
+        shell: bash
+        run: yes | flutter doctor --android-licenses || true
+      - name: Generate platform folder (not committed yet)
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          flutter create --platforms=${{ matrix.platform }} --project-name ${{ matrix.app }} "$tmp/gen"
+          cp -R "$tmp/gen/${{ matrix.platform }}" "apps/${{ matrix.app }}/"
+      - name: Build
+        shell: bash
+        working-directory: apps/${{ matrix.app }}
+        run: |
+          flutter pub get
+          ${{ matrix.cmd }}
+      - name: Size report
+        shell: bash
+        working-directory: apps/${{ matrix.app }}/build
+        run: |
+          echo "## ${{ matrix.app }} ${{ matrix.target }}" | tee -a "$GITHUB_STEP_SUMMARY"
+          find . -maxdepth 6 \( -name "*.apk" -o -name "*.exe" -o -name "*.app" -o -name "libapp.so" -o -name "*.dll" \) -print0 \
+            | xargs -0 du -sk 2>/dev/null | sort -rn | head -15 | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app }}-${{ matrix.target }}
+          path: apps/${{ matrix.app }}/build/**/release/**
+          if-no-files-found: warn
+          retention-days: 7

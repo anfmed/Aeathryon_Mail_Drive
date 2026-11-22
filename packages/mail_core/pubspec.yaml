@@ -1,0 +1,11 @@
+name: mail_core
+description: Aethryon Mail domain logic (capability parsing, sync strategy, threading, outbox, provider profiles). Pure Dart; no transport yet.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+dependencies:
+  aethryon_capability: {path: ../aethryon_capability}
+  aethryon_net: {path: ../aethryon_net}
+dev_dependencies:
+  test: any
