@@ -5,7 +5,7 @@ for p in aethryon_capability aethryon_net aethryon_log aethryon_platform aethryo
   echo "=== $p ==="
   pushd "packages/$p" >/dev/null
   dart pub get
-  dart analyze --fatal-infos
+  dart analyze
   if [ -d test ]; then dart test; fi
   popd >/dev/null
 done

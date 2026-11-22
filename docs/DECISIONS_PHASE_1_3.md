@@ -44,3 +44,7 @@ Local-only অ্যাপের CASA-ছাড় আছে কি না (S26 
 | 026 | WebDAV integration-test সার্ভার = `wsgidav` (Python), Nextcloud container নয় | G1/G5 CI মিনিট কম | Nextcloud-নির্দিষ্ট আচরণ পরে |
 | 027 | OAuth: desktop = loopback (RFC 8252); mobile redirect স্থগিত; IMAP OAuth শুধু যাচাইকৃত পথে | G6 | `authenticateWithOAuth2` enough_mail docs-এ আছে |
 | 028 | Mobile background sync = periodic fetch; push relay নেই (ADR-007) | G2 | — |
+| 029 | **Apple (iOS ও macOS) সম্পূর্ণ বাদ** — CI/release কোথাও নেই; Phase ১০-এ, আপনি চাইলে | ব্যবহারকারীর নির্দেশ + G3 | আগে Android+Windows, তারপর Linux (ঐচ্ছিক checkbox) |
+| 030 | **Build-গেট:** `build-apps` = `check` (analyze+test) সফল হলেই build; ত্রুটিযুক্ত কোড build হয় না | ব্যবহারকারীর নির্দেশ | infos fatal নয়; errors+warnings fatal |
+| 031 | **Auto-format:** `.dart` push-এ `format` workflow `dart format` চালিয়ে commit ফেরত পাঠায় (`[skip ci]`, bot-actor বাদ — লুপ নেই) | ব্যবহারকারীর নির্দেশ | ফলে push-এর পর `git pull` লাগতে পারে |
+| 032 | CI স্ক্রিপ্ট সবসময় `bash tools/x.sh` দিয়ে চালানো (executable-bit ভরসা নয়); ZIP `zip` কমান্ডে | প্রথম CI-ব্যর্থতার শিক্ষা | — |

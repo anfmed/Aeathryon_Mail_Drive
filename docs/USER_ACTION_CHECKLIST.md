@@ -1,14 +1,16 @@
 # USER_ACTION_CHECKLIST — আপনাকে যা যা করতে হবে (ক্রমানুসারে)
 
 ## A. এখনই (বাধ্যতামূলক, বিনামূল্যে)
-1. ☐ GitHub-এ **public** repository খুলুন (ADR-010)। নাম যা খুশি।
-2. ☐ এই ZIP unzip করুন; ভেতরের `aethryon-repo/` ফোল্ডারের **ভেতরের** ফাইলগুলো repo-র root-এ রাখুন (`.github/`, `apps/`, `packages/` …)। `.github` লুকানো ফোল্ডার — Windows Explorer-এ "Hidden items" চালু করুন।
-3. ☐ Git দিয়ে একবার push করুন (VS Code → Source Control, বা `git add . && git commit -m "phase 1-5" && git push`)। কোনো key/secret ফাইল যোগ করবেন না (`.gitignore` ঠেকাবে)।
-4. ☐ GitHub → **Actions** ট্যাব। প্রথমবার "I understand my workflows, go ahead and enable them" চাপুন।
-5. ☐ **`ci-core`** workflow চালান (Run workflow)। চারটি job আসবে: `core`, `webdav-live`, `apps`, `isolated`।
-6. ☐ লাল হলে: ব্যর্থ job-এ ক্লিক → লগের **শেষ ৪০ লাইন** + কোন job/step ব্যর্থ — কপি করে আমাকে পাঠান। (প্রথম রানে ব্যর্থ হওয়া প্রত্যাশিত; আমি ঠিক করে নতুন ZIP/প্যাচ দেব।)
-7. ☐ `ci-core`-এর `core`, `webdav-live`, `apps` সবুজ হলে **`build-apps`** চালান (১০টি job; Android/Windows/Linux আগে সবুজ হওয়ার কথা)।
-8. ☐ Artifacts থেকে Android APK ডাউনলোড করে নিজের ফোনে install করুন (Settings → "Install unknown apps")। অ্যাপ খুলে দেখুন; স্ক্রিনশট/মন্তব্য পাঠান।
+1. ☐ GitHub-এ **public** repository খুলুন (ADR-010)।
+2. ☐ ZIP unzip করুন; `aethryon-repo/`-এর **ভেতরের** ফাইলগুলো repo-র root-এ রাখুন (`.github/`, `apps/`, `packages/` …)। `.github` লুকানো ফোল্ডার — Explorer-এ "Hidden items" চালু করুন। *(আগের ZIP-এর ফাইলগুলো এই ZIP-এর ফাইল দিয়ে overwrite করুন।)*
+3. ☐ একবার push করুন (VS Code → Source Control, বা `git add . && git commit -m "phase 1-5 v2" && git push`)। কোনো key/secret ফাইল যোগ করবেন না।
+4. ☐ push-এর পর GitHub → **Actions** → **`format`** workflow নিজে চলবে (`dart format`)। শেষ হলে যদি সে কোনো বদল commit করে, নিজের কম্পিউটারে `git pull` করে নিন।
+5. ☐ Actions → **`build-apps`** → *Run workflow*। এটি প্রথমে **check** (analyze + test) চালায়:
+   - check-এ **ত্রুটি থাকলে build একেবারেই চলবে না** (আপনার নির্দেশ অনুযায়ী)। তখন check job-এর নাম ও লগের শেষ ~৪০ লাইন আমাকে পাঠান।
+   - check সফল হলে Android ও Windows build হবে (দুই অ্যাপ × দুই platform = ৪ job)।
+   - Linux চাইলে Run workflow-এর সময় "Linux-ও build করুন" টিক দিন। iOS/macOS বাদ।
+6. ☐ (ঐচ্ছিক) **`ci-core`** *Run workflow* — অতিরিক্ত: WebDAV live-test ও isolated (`mail_imap`) job। এগুলো ব্যর্থ হলে build আটকায় না, কিন্তু কোন লাইন ঠিক করতে হবে জানায়।
+7. ☐ build সফল হলে Artifacts থেকে Android APK নামিয়ে ফোনে install করুন (Settings → "Install unknown apps") ও Windows ZIP খুলে `.exe` চালান। মন্তব্য/স্ক্রিনশট পাঠান।
 
 ## B. দ্রুত ফোন/PC পরিমাপ (প্রায় ৩০ মিনিট, বিনামূল্যে)
 9. ☐ `docs/MEASUREMENT_PROTOCOL.md` অনুযায়ী আপনার সবচেয়ে দুর্বল Android ফোন ও ৪ GB Windows PC-তে: ঠান্ডা চালু হওয়ার সময়, idle RAM — লিখে পাঠান। এটাই Flutter-সিদ্ধান্তের (ADR-003) চূড়ান্ত পরীক্ষা।
@@ -16,7 +18,7 @@
 ## C. সিদ্ধান্ত যা আপনার (আমি অনুমান করিনি)
 10. ☐ **সফটওয়্যার-লাইসেন্স** (ADR-021): open-source (MIT/Apache/GPL) নাকি source-available/proprietary। `paid advanced feature` মডেলের সঙ্গে সম্পর্কিত। বলুন, আমি `LICENSE` যোগ করব।
 11. ☐ **Free বনাম paid** feature তালিকা (ADR-014) — এখনই দরকার নেই; Phase ৭+।
-12. ☐ **Apple** (ADR-008): iOS/macOS-এ বাস্তবে বিতরণ চাইলে Apple Developer Program (~$99/বছর, সূত্র: সেকেন্ডারি) লাগবে। এখন কিনবেন না। কবে চান জানালে আমি পরিকল্পনা করব।
+12. ☐ **Apple** (ADR-008, ADR-029): এখন সম্পূর্ণ বাদ। পরে (Phase ১০) iOS/macOS-এ বিতরণ চাইলে Apple Developer Program (~$99/বছর, সূত্র: সেকেন্ডারি) লাগবে। এখন কিনবেন না। কবে চান জানালে আমি পরিকল্পনা করব।
 13. ☐ **অ্যাপের আইকন/ব্র্যান্ড**: লোগো আছে? না থাকলে বলুন, সরল placeholder বানাব।
 14. ☐ **ডেভেলপার ইমেইল/গোপনীয়তা যোগাযোগ** (Privacy Policy-র জন্য) — কোন ইমেইল ব্যবহার করবেন?
 
