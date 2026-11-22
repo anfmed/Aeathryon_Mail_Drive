@@ -10,7 +10,9 @@ void main() {
     expect(find.text('Conversation'), findsNWidgets(2)); // Lunch? + Re: Lunch?
   });
 
-  testWidgets('message view shows plain text only (scripts/images dropped)', (t) async {
+  testWidgets('message view shows plain text only (scripts/images dropped)', (
+    t,
+  ) async {
     await t.pumpWidget(const MailApp());
     await t.pumpAndSettle();
     await t.tap(find.text('Welcome'));

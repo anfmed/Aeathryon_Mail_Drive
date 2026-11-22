@@ -6,13 +6,13 @@ class Space {
 
 /// Same language for both apps; each app passes its own seed colour.
 ThemeData buildAethryonTheme(Color seed, Brightness brightness) => ThemeData(
-      useMaterial3: true,
-      colorSchemeSeed: seed,
-      brightness: brightness,
-      visualDensity: VisualDensity.adaptivePlatformDensity,
-      // restrained motion: no fancy page transitions beyond platform defaults
-      listTileTheme: const ListTileThemeData(minVerticalPadding: 6),
-    );
+  useMaterial3: true,
+  colorSchemeSeed: seed,
+  brightness: brightness,
+  visualDensity: VisualDensity.adaptivePlatformDensity,
+  // restrained motion: no fancy page transitions beyond platform defaults
+  listTileTheme: const ListTileThemeData(minVerticalPadding: 6),
+);
 
 enum Tone { neutral, good, warn, bad }
 
@@ -34,11 +34,14 @@ class StatusBadge extends StatelessWidget {
     return Semantics(
       label: 'Status: $label',
       child: ExcludeSemantics(
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: Space.xs),
-          Text(label, style: TextStyle(color: color)),
-        ]),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: Space.xs),
+            Text(label, style: TextStyle(color: color)),
+          ],
+        ),
       ),
     );
   }

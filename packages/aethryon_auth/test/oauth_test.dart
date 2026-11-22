@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:aethryon_auth/aethryon_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -12,13 +13,17 @@ void main() {
   test('authorization URL carries PKCE S256 + state', () {
     final p = Pkce.fromVerifier('dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk');
     final u = buildAuthorizationUrl(
-        endpoint: Uri.parse('https://idp.example/auth'),
-        clientId: 'cid',
-        redirectUri: Uri.parse('http://127.0.0.1:5555/callback'),
-        scopes: ['a', 'b'],
-        state: 'st',
-        pkce: p);
-    expect(u.queryParameters['code_challenge'], 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
+      endpoint: Uri.parse('https://idp.example/auth'),
+      clientId: 'cid',
+      redirectUri: Uri.parse('http://127.0.0.1:5555/callback'),
+      scopes: ['a', 'b'],
+      state: 'st',
+      pkce: p,
+    );
+    expect(
+      u.queryParameters['code_challenge'],
+      'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+    );
     expect(u.queryParameters['code_challenge_method'], 'S256');
     expect(u.queryParameters['scope'], 'a b');
     expect(u.queryParameters['state'], 'st');
@@ -39,11 +44,24 @@ void main() {
       seen = req;
       body = req.body;
       return http.Response(
-          jsonEncode({'access_token': 'AT', 'refresh_token': 'RT', 'expires_in': 100, 'scope': 'a b'}), 200);
+        jsonEncode({
+          'access_token': 'AT',
+          'refresh_token': 'RT',
+          'expires_in': 100,
+          'scope': 'a b',
+        }),
+        200,
+      );
     });
     final t = await exchangeCode(
-        client: c, tokenEndpoint: token, clientId: 'cid', code: 'CODE',
-        redirectUri: Uri.parse('http://127.0.0.1:1/callback'), codeVerifier: 'VER', nowUtc: () => now);
+      client: c,
+      tokenEndpoint: token,
+      clientId: 'cid',
+      code: 'CODE',
+      redirectUri: Uri.parse('http://127.0.0.1:1/callback'),
+      codeVerifier: 'VER',
+      nowUtc: () => now,
+    );
     expect(seen.method, 'POST');
     final f = Uri.splitQueryString(body);
     expect(f['grant_type'], 'authorization_code');
@@ -56,17 +74,40 @@ void main() {
   });
 
   test('refresh keeps old refresh token when server omits it', () async {
-    final c = MockClient((_) async => http.Response(jsonEncode({'access_token': 'AT2', 'expires_in': 60}), 200));
+    final c = MockClient(
+      (_) async => http.Response(
+        jsonEncode({'access_token': 'AT2', 'expires_in': 60}),
+        200,
+      ),
+    );
     final t = await refreshTokens(
-        client: c, tokenEndpoint: token, clientId: 'cid', refreshToken: 'OLD', nowUtc: () => now);
+      client: c,
+      tokenEndpoint: token,
+      clientId: 'cid',
+      refreshToken: 'OLD',
+      nowUtc: () => now,
+    );
     expect(t.refreshToken, 'OLD');
   });
 
   test('errors never echo the response body', () async {
-    final c = MockClient((_) async =>
-        http.Response(jsonEncode({'error': 'invalid_grant', 'error_description': 'expired', 'refresh_token': 'LEAK'}), 400));
+    final c = MockClient(
+      (_) async => http.Response(
+        jsonEncode({
+          'error': 'invalid_grant',
+          'error_description': 'expired',
+          'refresh_token': 'LEAK',
+        }),
+        400,
+      ),
+    );
     try {
-      await refreshTokens(client: c, tokenEndpoint: token, clientId: 'cid', refreshToken: 'OLD');
+      await refreshTokens(
+        client: c,
+        tokenEndpoint: token,
+        clientId: 'cid',
+        refreshToken: 'OLD',
+      );
       fail('should throw');
     } on OAuthError catch (e) {
       expect(e.code, 'invalid_grant');
@@ -77,15 +118,29 @@ void main() {
   test('non-JSON response is an OAuthError', () async {
     final c = MockClient((_) async => http.Response('<html>oops</html>', 502));
     await expectLater(
-        refreshTokens(client: c, tokenEndpoint: token, clientId: 'x', refreshToken: 'y'),
-        throwsA(isA<OAuthError>()));
+      refreshTokens(
+        client: c,
+        tokenEndpoint: token,
+        clientId: 'x',
+        refreshToken: 'y',
+      ),
+      throwsA(isA<OAuthError>()),
+    );
   });
 
   test('SecureTokenStore round-trip and namespace isolation', () async {
     final mem = MemorySecureStore();
     final drive = SecureTokenStore(mem, 'aethryon.drive');
     final mail = SecureTokenStore(mem, 'aethryon.mail');
-    await drive.write('acc', TokenSet(accessToken: 'AT', refreshToken: 'RT', expiresAtUtc: now, scopes: ['s']));
+    await drive.write(
+      'acc',
+      TokenSet(
+        accessToken: 'AT',
+        refreshToken: 'RT',
+        expiresAtUtc: now,
+        scopes: ['s'],
+      ),
+    );
     expect((await drive.read('acc'))!.refreshToken, 'RT');
     expect(await mail.read('acc'), isNull);
     await drive.delete('acc');
@@ -97,7 +152,9 @@ void main() {
     expect(r.redirectUri.host, '127.0.0.1');
     final fut = r.waitForCallback(timeout: const Duration(seconds: 5));
     final cl = HttpClient();
-    final req = await cl.getUrl(r.redirectUri.replace(queryParameters: {'code': 'abc', 'state': 's'}));
+    final req = await cl.getUrl(
+      r.redirectUri.replace(queryParameters: {'code': 'abc', 'state': 's'}),
+    );
     final resp = await req.close();
     await resp.drain<void>();
     cl.close();

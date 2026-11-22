@@ -4,9 +4,17 @@ import 'transport.dart';
 
 abstract class MailStore {
   Future<FolderSyncState?> folderState(String accountId, String folder);
-  Future<void> saveFolderState(String accountId, String folder, FolderSyncState s);
+  Future<void> saveFolderState(
+    String accountId,
+    String folder,
+    FolderSyncState s,
+  );
   Future<void> clearFolder(String accountId, String folder);
-  Future<void> upsertHeaders(String accountId, String folder, List<HeaderInfo> h);
+  Future<void> upsertHeaders(
+    String accountId,
+    String folder,
+    List<HeaderInfo> h,
+  );
   Future<List<HeaderInfo>> headers(String accountId, String folder);
 }
 
@@ -16,9 +24,11 @@ class MemoryMailStore implements MailStore {
   String _k(String a, String f) => '$a\u0000$f';
 
   @override
-  Future<FolderSyncState?> folderState(String a, String f) async => _state[_k(a, f)];
+  Future<FolderSyncState?> folderState(String a, String f) async =>
+      _state[_k(a, f)];
   @override
-  Future<void> saveFolderState(String a, String f, FolderSyncState s) async => _state[_k(a, f)] = s;
+  Future<void> saveFolderState(String a, String f, FolderSyncState s) async =>
+      _state[_k(a, f)] = s;
   @override
   Future<void> clearFolder(String a, String f) async {
     _state.remove(_k(a, f));
@@ -35,7 +45,8 @@ class MemoryMailStore implements MailStore {
 
   @override
   Future<List<HeaderInfo>> headers(String a, String f) async {
-    final l = (_hdr[_k(a, f)] ?? {}).values.toList()..sort((x, y) => y.uid.compareTo(x.uid));
+    final l = (_hdr[_k(a, f)] ?? {}).values.toList()
+      ..sort((x, y) => y.uid.compareTo(x.uid));
     return l;
   }
 }
@@ -55,7 +66,11 @@ class MailSyncService {
   final MailStore store;
   MailSyncService(this.transport, this.store);
 
-  Future<SyncResult> syncFolder(String accountId, String path, {int pageSize = 200}) async {
+  Future<SyncResult> syncFolder(
+    String accountId,
+    String path, {
+    int pageSize = 200,
+  }) async {
     if (pageSize < 1) throw ArgumentError('pageSize must be >= 1');
     final caps = ImapCapabilities.parse(await transport.capabilityLine());
     final strategy = chooseSyncStrategy(caps);
@@ -74,7 +89,11 @@ class MailSyncService {
 
     var fetched = 0;
     while (true) {
-      final batch = await transport.fetchHeaders(path, fromUid: from, limit: pageSize);
+      final batch = await transport.fetchHeaders(
+        path,
+        fromUid: from,
+        limit: pageSize,
+      );
       if (batch.isEmpty) break;
       await store.upsertHeaders(accountId, path, batch);
       fetched += batch.length;

@@ -1,5 +1,7 @@
 import 'dart:io' show HttpDate;
+
 import 'package:xml/xml.dart';
+
 import 'models.dart';
 
 String _local(XmlElement e) => e.name.local;
@@ -17,13 +19,18 @@ String _decodeHrefToPath(String href) {
 /// Parses a PROPFIND multistatus body. [requestedPath] (decoded, no trailing
 /// slash handling required) is used to drop the self-entry and to compute parent.
 /// Only propstat blocks with a 200 status contribute properties.
-List<RemoteNode> parsePropfind(String body,
-    {required String accountId, required String requestedPath}) {
+List<RemoteNode> parsePropfind(
+  String body, {
+  required String accountId,
+  required String requestedPath,
+}) {
   final doc = XmlDocument.parse(body);
   final self = _normalize(requestedPath);
   final out = <RemoteNode>[];
 
-  for (final resp in doc.descendants.whereType<XmlElement>().where((e) => _local(e) == 'response')) {
+  for (final resp in doc.descendants.whereType<XmlElement>().where(
+    (e) => _local(e) == 'response',
+  )) {
     final hrefEl = _kids(resp, 'href').firstOrNull;
     if (hrefEl == null) continue;
     final rawPath = _decodeHrefToPath(hrefEl.innerText.trim());
@@ -62,17 +69,21 @@ List<RemoteNode> parsePropfind(String body,
 
     final segs = path.split('/').where((s) => s.isNotEmpty).toList();
     final name = segs.isEmpty ? '/' : segs.last;
-    final parent = segs.length <= 1 ? '/' : '/${segs.sublist(0, segs.length - 1).join('/')}';
-    out.add(RemoteNode(
-      accountId: accountId,
-      id: path,
-      parentId: parent,
-      name: name,
-      isFolder: isFolder,
-      size: isFolder ? null : size,
-      modifiedUtc: modified,
-      etag: etag,
-    ));
+    final parent = segs.length <= 1
+        ? '/'
+        : '/${segs.sublist(0, segs.length - 1).join('/')}';
+    out.add(
+      RemoteNode(
+        accountId: accountId,
+        id: path,
+        parentId: parent,
+        name: name,
+        isFolder: isFolder,
+        size: isFolder ? null : size,
+        modifiedUtc: modified,
+        etag: etag,
+      ),
+    );
   }
   return out;
 }

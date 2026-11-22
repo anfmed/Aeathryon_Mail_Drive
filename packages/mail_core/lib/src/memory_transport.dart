@@ -18,7 +18,11 @@ class MemoryMailTransport implements MailTransport {
 
   MemoryMailTransport({this.capabilities = 'IMAP4rev1 IDLE'});
 
-  void addFolder(String path, {int uidValidity = 1, List<HeaderInfo> messages = const []}) {
+  void addFolder(
+    String path, {
+    int uidValidity = 1,
+    List<HeaderInfo> messages = const [],
+  }) {
     _uidValidity[path] = uidValidity;
     _folders[path] = List.of(messages);
   }
@@ -30,8 +34,9 @@ class MemoryMailTransport implements MailTransport {
   Future<String> capabilityLine() async => capabilities;
 
   @override
-  Future<List<FolderInfo>> listFolders() async =>
-      [for (final e in _folders.keys) FolderInfo(e, _uidValidity[e]!)];
+  Future<List<FolderInfo>> listFolders() async => [
+    for (final e in _folders.keys) FolderInfo(e, _uidValidity[e]!),
+  ];
 
   @override
   Future<FolderInfo> select(String path) async {
@@ -42,22 +47,34 @@ class MemoryMailTransport implements MailTransport {
   }
 
   @override
-  Future<List<HeaderInfo>> fetchHeaders(String path, {required int fromUid, int? limit}) async {
+  Future<List<HeaderInfo>> fetchHeaders(
+    String path, {
+    required int fromUid,
+    int? limit,
+  }) async {
     final all = _folders[path]!.where((h) => h.uid >= fromUid).toList()
       ..sort((a, b) => a.uid.compareTo(b.uid));
     return limit == null ? all : all.take(limit).toList();
   }
 
   @override
-  Future<void> setFlags(String path, List<int> uids,
-      {Set<String> add = const {}, Set<String> remove = const {}}) async {
+  Future<void> setFlags(
+    String path,
+    List<int> uids, {
+    Set<String> add = const {},
+    Set<String> remove = const {},
+  }) async {
     final list = _folders[path]!;
     for (var i = 0; i < list.length; i++) {
       final h = list[i];
       if (!uids.contains(h.uid)) continue;
       list[i] = HeaderInfo(
-        uid: h.uid, messageId: h.messageId, inReplyTo: h.inReplyTo,
-        references: h.references, subject: h.subject, dateUtc: h.dateUtc,
+        uid: h.uid,
+        messageId: h.messageId,
+        inReplyTo: h.inReplyTo,
+        references: h.references,
+        subject: h.subject,
+        dateUtc: h.dateUtc,
         flags: {...h.flags.difference(remove), ...add},
       );
     }
