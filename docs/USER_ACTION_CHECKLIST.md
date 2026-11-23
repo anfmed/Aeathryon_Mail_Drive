@@ -13,6 +13,14 @@
    - Run workflow-এর সময় ঐচ্ছিক টিক: **Linux-ও build** · **অতিরিক্ত পরীক্ষা** (WebDAV live, mail_imap — ব্যর্থ হলেও build আটকায় না) · **draft release**। iOS/macOS নেই।
 6. ☐ build সফল হলে Artifacts থেকে `*-android` (APK) ও `*-windows` (ZIP) নামিয়ে পরীক্ষা করুন; মন্তব্য/স্ক্রিনশট পাঠান।
 
+## A+. Phase ৬–৭ পরীক্ষা (v4 push-এর পর)
+- ☐ `ci` → Run workflow; এবার **"অতিরিক্ত পরীক্ষা"-ও টিক দিন**। এতে দুটি জিনিস আসবে যা আমি দেখতে চাই: (১) `webdav-live` (ফিক্স কাজ করল কি না), (২) `db-spike` ×৪ (এনক্রিপ্টেড DB: Ubuntu+Windows × sqlite3mc/sqlcipher; ধাপের Summary-তে লাইব্রেরির আকারও থাকবে)।
+- ☐ ফল পাঠান: প্রতিটি ব্যর্থ job-এর নাম + ত্রুটির লাইন; সবুজ হলে শুধু "সবুজ"। `db-spike` Summary-র আকার-তালিকাটি কপি করে দিলে ভালো।
+- ☐ (ঐচ্ছিক, আমার জন্য বেশ কাজের) আসল account দিয়ে পরীক্ষা — **চ্যাটে কিছু পাঠাবেন না, অ্যাপে নিজে বসান**:
+  - Drive অ্যাপ → Accounts → Add account → আপনার Nextcloud/WebDAV (https, app-password) → "Test connection" → ফাইল দেখা যায় কি?
+  - Mail অ্যাপ → Accounts → Add → iCloud (app-specific password) বা অন্য IMAP → ইনবক্সের subject-তালিকা আসে কি? (এটাই `mail_imap`-এর প্রথম আসল পরীক্ষা)
+  - ফল জানান: কাজ করেছে / কোন ত্রুটি-বার্তা এসেছে (বার্তা অক্ষরে অক্ষরে)। password/ঠিকানা পাঠাবেন না।
+
 ## B. দ্রুত ফোন/PC পরিমাপ (প্রায় ৩০ মিনিট, বিনামূল্যে)
 9. ☐ `docs/MEASUREMENT_PROTOCOL.md` অনুযায়ী আপনার সবচেয়ে দুর্বল Android ফোন ও ৪ GB Windows PC-তে: ঠান্ডা চালু হওয়ার সময়, idle RAM — লিখে পাঠান। এটাই Flutter-সিদ্ধান্তের (ADR-003) চূড়ান্ত পরীক্ষা।
 

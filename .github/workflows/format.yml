@@ -23,7 +23,7 @@ jobs:
         shell: bash
         run: |
           # সিনট্যাক্স-ত্রুটিযুক্ত ফাইল format হয় না (exit 65), বাকিগুলো হয়; ত্রুটি ধরবে ci-র check ধাপ।
-          dart format packages apps || echo "::warning::some files could not be formatted (syntax errors?)"
+          dart format packages apps spikes || echo "::warning::some files could not be formatted (syntax errors?)"
       - name: Commit formatting changes (if any)
         shell: bash
         run: |
@@ -32,7 +32,7 @@ jobs:
           else
             git config user.name  "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -A packages apps
+            git add -A packages apps spikes
             git commit -m "style: dart format [skip ci]"
             git push origin HEAD:${{ github.ref_name }}
           fi

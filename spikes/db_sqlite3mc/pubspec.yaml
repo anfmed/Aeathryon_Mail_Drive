@@ -1,0 +1,14 @@
+name: db_sqlite3mc
+description: "Spike: does package:sqlite3 with source=sqlite3mc give us an encrypted DB with FTS5 on this OS?"
+publish_to: none
+environment:
+  sdk: '>=3.10.0 <4.0.0'
+dependencies:
+  sqlite3: any
+dev_dependencies:
+  test: any
+# The build-hook setting is read from the ROOT package only (sqlite3 docs, hook-options topic).
+hooks:
+  user_defines:
+    sqlite3:
+      source: sqlite3mc

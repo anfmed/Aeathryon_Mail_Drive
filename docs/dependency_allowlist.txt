@@ -5,3 +5,4 @@
 - flutter_test
 - enough_mail
 - flutter_secure_storage
+- sqlite3

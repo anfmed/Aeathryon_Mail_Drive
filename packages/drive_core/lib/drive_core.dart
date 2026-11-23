@@ -7,3 +7,8 @@ export 'src/webdav_parse.dart';
 export 'src/webdav_adapter.dart';
 export 'src/memory_adapter.dart';
 export 'src/browse.dart';
+export 'src/url_rules.dart';
+export 'src/http_util.dart';
+export 'src/resumable.dart';
+export 'src/dropbox_adapter.dart';
+export 'src/onedrive_adapter.dart';

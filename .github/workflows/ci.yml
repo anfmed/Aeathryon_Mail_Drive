@@ -38,7 +38,7 @@ jobs:
         shell: bash
         run: |
           set -e
-          for d in packages/aethryon_design apps/drive_app apps/mail_app; do
+          for d in packages/aethryon_design packages/aethryon_secure_store_flutter apps/drive_app apps/mail_app; do
             echo "=== $d ==="
             (cd "$d" && flutter pub get && flutter analyze --no-fatal-infos && { [ ! -d test ] || flutter test; })
           done
@@ -81,7 +81,7 @@ jobs:
         run: bash tools/install_flutter.sh
       - name: Linux build dependencies
         if: matrix.target == 'linux'
-        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libsecret-1-dev libjsoncpp-dev
       - name: Enable desktop platform
         if: matrix.target != 'android'
         shell: bash
@@ -182,27 +182,32 @@ jobs:
         if: always()
         run: cat /tmp/wsgidav.log || true
 
-  isolated:
-    name: extra - isolated (mail_imap, secure store)
+  db-spike:
+    name: extra - DB encryption spike (${{ matrix.spike }} / ${{ matrix.os }})
     if: inputs.run_extra_checks
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     continue-on-error: true
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        spike: [db_sqlite3mc, db_sqlcipher]
     steps:
       - uses: actions/checkout@v4
       - name: Install Flutter (official repo)
         shell: bash
         run: bash tools/install_flutter.sh
-      - name: mail_imap
+      - name: Encrypted-DB test (file is not plaintext, wrong key fails, FTS5 works)
         shell: bash
+        working-directory: spikes/${{ matrix.spike }}
         run: |
-          cd packages/mail_imap
           dart pub get
-          dart analyze
-          dart test
-      - name: secure store wrapper
+          dart test -r expanded
+      - name: Native library size (what the app would ship)
+        if: always()
         shell: bash
+        working-directory: spikes/${{ matrix.spike }}
         run: |
-          cd packages/aethryon_secure_store_flutter
-          flutter pub get
-          flutter analyze --no-fatal-infos
+          echo "## ${{ matrix.spike }} / ${{ matrix.os }}" >> "$GITHUB_STEP_SUMMARY"
+          find .dart_tool -type f \( -iname "*sqlite*" -o -iname "*sqlcipher*" \) \( -name "*.so" -o -name "*.dll" -o -name "*.dylib" \) -exec du -k {} + 2>/dev/null | tee -a "$GITHUB_STEP_SUMMARY" || true

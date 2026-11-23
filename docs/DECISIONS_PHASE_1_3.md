@@ -50,3 +50,15 @@ Local-only অ্যাপের CASA-ছাড় আছে কি না (S26 
 | 032 | CI স্ক্রিপ্ট সবসময় `bash tools/x.sh` দিয়ে চালানো (executable-bit ভরসা নয়); ZIP `zip` কমান্ডে | প্রথম CI-ব্যর্থতার শিক্ষা | — |
 | 033 | **Workflow মাত্র ২টি:** `format` (প্রতিটি push-এ নিজে, কোনো path/branch ফিল্টার নেই) ও `ci` (হাতে: check→build, ঐচ্ছিক Linux/extra/draft-release)। আলাদা `ci-core`/`build-apps`/`release` বাতিল | ব্যবহারকারীর নির্দেশ; কম বিভ্রান্তি | প্রথম `format` না চলার কারণ: ফিল্টার ছিল `**.dart` পরিবর্তনে, কিন্তু v2 push-এ কোনো .dart বদলায়নি (সম্ভাব্য; branch-নাম `main` না হলেও চলত না) |
 | 034 | CI-তে `flutter analyze --no-fatal-infos`: error ও **warning** build আটকায়, info আটকায় না | G7 + অকারণ-ব্লকিং এড়ানো | প্রথম আসল ব্যর্থতা: test ফাইলে unused import (warning) |
+
+---
+# Phase ৬–৭ সিদ্ধান্ত (লক্ষ্য-ভিত্তিক)
+| ADR | সিদ্ধান্ত | লক্ষ্য | টীকা |
+|---|---|---|---|
+| 035 | **এনক্রিপ্টেড স্থানীয় DB:** `package:sqlite3` ৩.x-এর build-hook দিয়ে `sqlite3mc` (SQLite3MultipleCiphers) বনাম `sqlcipher` — সিদ্ধান্ত **CI-spike-এর ফলের পর**। প্রত্যাশা: `sqlite3mc` (OpenSSL-মুক্ত, ছোট)। শর্ত: FTS5 কাজ করতে হবে। (হুক-সেটিং শুধু **root package**-এর pubspec থেকে পড়া হয় — ফলে সেটি অ্যাপ-pubspec-এ যাবে) | G1 + G6 | সূত্র: pub.dev sqlite3 hook-options (PRIMARY)। `sqlcipher_flutter_libs` EOL (S24) |
+| 036 | আসল account আগে **OAuth-মুক্ত পথে**: WebDAV/Nextcloud (app-password), IMAP (app-password: iCloud/Yahoo/generic)। Gmail/Outlook = OAuth UI আসা পর্যন্ত UI-তে সৎ ব্যাখ্যাসহ **আটকানো** | G3 + G7 | `connectBlockedReason` |
+| 037 | Password **শুধু OS secure store-এ** (`AccountVault`); account-metadata-তে secret-জাতীয় key গ্রহণযোগ্য নয়; সার্ভার-URL **https বাধ্যতামূলক** (http শুধু loopback) | G6 | — |
+| 038 | যাচাই-না-হওয়া provider (Dropbox, OneDrive) = adapter + mock-test আছে, কিন্তু **UI-তে নির্বাচনযোগ্য নয়**; live-test পাস করলে তবেই | G7 | capability `UNVERIFIED` |
+| 039 | যে provider-এ trash নেই সেখানে মোছা = "চিরতরে মোছা" লিখিত স্পষ্ট নিশ্চিতকরণ, Undo নেই | G6 recoverability | — |
+| 040 | **Retry-নিরাপত্তা:** body প্রতি attempt-এ নতুন করে বানানো; upload-stream স্বয়ংক্রিয় retry হয় না; ত্রুটি-বার্তায় response-body/token থাকে না; **bearer token কখনো pre-authenticated URL-এ পাঠানো হয় না** (OneDrive download/upload) | G6 | প্রথম live-CI-র শিক্ষা |
+| 041 | Proton Bridge সংযোগ এখনো বাস্তবায়িত নয় (STARTTLS-পথ অযাচাইকৃত) → UI-তে আটকানো | G7 | — |

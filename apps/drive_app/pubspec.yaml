@@ -1,13 +1,17 @@
 name: drive_app
-description: "Aethryon Drive app (Phase 4: demo-data UI over the real adapter interface)"
+description: "Aethryon Drive app (Phase 6: demo data + real WebDAV/Nextcloud accounts)"
 publish_to: none
-version: 0.2.0+1
+version: 0.3.0+1
 environment:
   sdk: '>=3.3.0 <4.0.0'
 dependencies:
   flutter: {sdk: flutter}
+  aethryon_auth: {path: ../../packages/aethryon_auth}
   aethryon_capability: {path: ../../packages/aethryon_capability}
   aethryon_design: {path: ../../packages/aethryon_design}
+  aethryon_net: {path: ../../packages/aethryon_net}
+  aethryon_platform: {path: ../../packages/aethryon_platform}
+  aethryon_secure_store_flutter: {path: ../../packages/aethryon_secure_store_flutter}
   drive_core: {path: ../../packages/drive_core}
 dev_dependencies:
   flutter_test: {sdk: flutter}

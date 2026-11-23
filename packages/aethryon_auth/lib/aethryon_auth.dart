@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:math';
-
 import 'package:crypto/crypto.dart';
 
 export 'src/oauth.dart';
 export 'src/loopback.dart';
 export 'src/secure_token_store.dart';
+export 'src/account_vault.dart';
+export 'src/oauth_providers.dart';
+export 'src/oauth_signin.dart';
 
 String _b64url(List<int> bytes) => base64UrlEncode(bytes).replaceAll('=', '');
 
@@ -48,10 +50,9 @@ class TokenSet {
     this.scopes = const [],
   });
 
-  bool needsRefresh(
-    DateTime nowUtc, {
-    Duration skew = const Duration(seconds: 60),
-  }) => !nowUtc.add(skew).isBefore(expiresAtUtc);
+  bool needsRefresh(DateTime nowUtc,
+          {Duration skew = const Duration(seconds: 60)}) =>
+      !nowUtc.add(skew).isBefore(expiresAtUtc);
 
   /// Never prints secrets.
   @override
@@ -59,18 +60,18 @@ class TokenSet {
       'TokenSet(expires: ${expiresAtUtc.toIso8601String()}, scopes: $scopes)';
 
   Map<String, Object?> toJson() => {
-    'a': accessToken,
-    'r': refreshToken,
-    'e': expiresAtUtc.toIso8601String(),
-    's': scopes,
-  };
+        'a': accessToken,
+        'r': refreshToken,
+        'e': expiresAtUtc.toIso8601String(),
+        's': scopes,
+      };
 
   factory TokenSet.fromJson(Map<String, Object?> j) => TokenSet(
-    accessToken: j['a'] as String,
-    refreshToken: j['r'] as String?,
-    expiresAtUtc: DateTime.parse(j['e'] as String).toUtc(),
-    scopes: (j['s'] as List?)?.cast<String>() ?? const [],
-  );
+        accessToken: j['a'] as String,
+        refreshToken: j['r'] as String?,
+        expiresAtUtc: DateTime.parse(j['e'] as String).toUtc(),
+        scopes: (j['s'] as List?)?.cast<String>() ?? const [],
+      );
 }
 
 /// Implementations MUST persist via the OS secure store only (never plain files/DB).

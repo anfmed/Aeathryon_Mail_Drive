@@ -31,17 +31,8 @@ abstract class MailTransport {
   Future<String> capabilityLine();
   Future<List<FolderInfo>> listFolders();
   Future<FolderInfo> select(String path);
-  Future<List<HeaderInfo>> fetchHeaders(
-    String path, {
-    required int fromUid,
-    int? limit,
-  });
-  Future<void> setFlags(
-    String path,
-    List<int> uids, {
-    Set<String> add = const {},
-    Set<String> remove = const {},
-  });
+  Future<List<HeaderInfo>> fetchHeaders(String path, {required int fromUid, int? limit});
+  Future<void> setFlags(String path, List<int> uids, {Set<String> add = const {}, Set<String> remove = const {}});
   Future<void> sendPlain({
     required String fromName,
     required String fromAddress,

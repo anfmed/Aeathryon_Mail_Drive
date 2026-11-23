@@ -32,13 +32,8 @@ class RetryPolicy {
   });
 
   /// attempt is 1-based (delay applied after attempt N failed). Equal jitter.
-  Duration delayFor(
-    int attempt, {
-    required math.Random random,
-    Duration? retryAfter,
-  }) {
-    if (retryAfter != null)
-      return retryAfter > maxDelay ? maxDelay : retryAfter;
+  Duration delayFor(int attempt, {required math.Random random, Duration? retryAfter}) {
+    if (retryAfter != null) return retryAfter > maxDelay ? maxDelay : retryAfter;
     final shift = math.min(math.max(attempt - 1, 0), 20);
     final exp = baseDelay.inMilliseconds * (1 << shift);
     final capped = math.min(exp, maxDelay.inMilliseconds);
@@ -65,20 +60,15 @@ Future<T> retry<T>({
 }) async {
   final rnd = random ?? math.Random();
   final doSleep = sleep ?? (Duration d) => Future<void>.delayed(d);
-  for (var attempt = 1; ; attempt++) {
+  for (var attempt = 1;; attempt++) {
     try {
       return await op();
     } catch (e) {
       final kind = classify(e);
       if (kind == FailureKind.permanent || kind == FailureKind.auth) rethrow;
       if (attempt >= policy.maxAttempts) throw RetryExhausted(e, attempt);
-      await doSleep(
-        policy.delayFor(
-          attempt,
-          random: rnd,
-          retryAfter: retryAfterOf?.call(e),
-        ),
-      );
+      await doSleep(policy.delayFor(attempt,
+          random: rnd, retryAfter: retryAfterOf?.call(e)));
     }
   }
 }
@@ -96,9 +86,9 @@ class TokenBucket {
     required this.capacity,
     required this.refillPerSecond,
     DateTime Function()? now,
-  }) : _now = now ?? DateTime.now,
-       _tokens = capacity,
-       _last = (now ?? DateTime.now)();
+  })  : _now = now ?? DateTime.now,
+        _tokens = capacity,
+        _last = (now ?? DateTime.now)();
 
   Duration acquire([double cost = 1]) {
     final t = _now();

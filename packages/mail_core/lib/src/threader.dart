@@ -3,12 +3,7 @@ class MsgRef {
   final String? messageId;
   final String? inReplyTo;
   final List<String> references;
-  const MsgRef({
-    required this.key,
-    this.messageId,
-    this.inReplyTo,
-    this.references = const [],
-  });
+  const MsgRef({required this.key, this.messageId, this.inReplyTo, this.references = const []});
 }
 
 /// Local threading from Message-ID / In-Reply-To / References (union-find).
@@ -45,8 +40,7 @@ Map<String, String> buildThreads(List<MsgRef> msgs) {
     }
   }
 
-  String node(MsgRef m) =>
-      m.messageId != null ? 'm:${_norm(m.messageId!)}' : 'k:${m.key}';
+  String node(MsgRef m) => m.messageId != null ? 'm:${_norm(m.messageId!)}' : 'k:${m.key}';
 
   for (final m in msgs) {
     final n = node(m);
@@ -67,5 +61,4 @@ Map<String, String> buildThreads(List<MsgRef> msgs) {
   return {for (final m in msgs) m.key: find(node(m))};
 }
 
-String _norm(String id) =>
-    id.trim().replaceAll(RegExp(r'^<|>$'), '').toLowerCase();
+String _norm(String id) => id.trim().replaceAll(RegExp(r'^<|>$'), '').toLowerCase();

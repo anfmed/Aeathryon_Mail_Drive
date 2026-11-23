@@ -7,8 +7,7 @@ class ImapCapabilities {
   factory ImapCapabilities.parse(String line) {
     var s = line.trim();
     if (s.startsWith('*')) s = s.substring(1).trim();
-    if (s.toUpperCase().startsWith('CAPABILITY'))
-      s = s.substring('CAPABILITY'.length);
+    if (s.toUpperCase().startsWith('CAPABILITY')) s = s.substring('CAPABILITY'.length);
     final t = s
         .split(RegExp(r'\s+'))
         .where((e) => e.isNotEmpty)
@@ -44,11 +43,7 @@ class FolderSyncState {
   final int uidValidity;
   final int? highestModSeq;
   final int? lastSeenUid;
-  const FolderSyncState({
-    required this.uidValidity,
-    this.highestModSeq,
-    this.lastSeenUid,
-  });
+  const FolderSyncState({required this.uidValidity, this.highestModSeq, this.lastSeenUid});
 }
 
 enum ResyncAction { incremental, fullResync }
