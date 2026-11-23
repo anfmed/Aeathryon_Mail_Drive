@@ -21,16 +21,40 @@ void main() {
 }
 
 void blockedTests() {
-  test('Proton: blocked on phones (companion) and on desktop (not implemented)', () {
-    final p = profileById('proton_bridge')!;
-    expect(connectBlockedReason(p, isMobile: true), contains('desktop companion'));
-    expect(connectBlockedReason(p, isMobile: false), contains('not implemented'));
-  });
+  test(
+    'Proton: blocked on phones (companion) and on desktop (not implemented)',
+    () {
+      final p = profileById('proton_bridge')!;
+      expect(
+        connectBlockedReason(p, isMobile: true),
+        contains('desktop companion'),
+      );
+      expect(
+        connectBlockedReason(p, isMobile: false),
+        contains('not implemented'),
+      );
+    },
+  );
   test('OAuth-only providers are blocked; app-password providers are not', () {
-    expect(connectBlockedReason(profileById('gmail')!, isMobile: false), contains('OAuth'));
-    expect(connectBlockedReason(profileById('outlook')!, isMobile: false), contains('OAuth'));
-    expect(connectBlockedReason(profileById('icloud')!, isMobile: true), isNull);
-    expect(connectBlockedReason(profileById('generic_imap')!, isMobile: false), isNull);
-    expect(connectBlockedReason(profileById('yahoo')!, isMobile: false), isNull);
+    expect(
+      connectBlockedReason(profileById('gmail')!, isMobile: false),
+      contains('OAuth'),
+    );
+    expect(
+      connectBlockedReason(profileById('outlook')!, isMobile: false),
+      contains('OAuth'),
+    );
+    expect(
+      connectBlockedReason(profileById('icloud')!, isMobile: true),
+      isNull,
+    );
+    expect(
+      connectBlockedReason(profileById('generic_imap')!, isMobile: false),
+      isNull,
+    );
+    expect(
+      connectBlockedReason(profileById('yahoo')!, isMobile: false),
+      isNull,
+    );
   });
 }

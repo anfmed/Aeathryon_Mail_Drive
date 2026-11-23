@@ -23,7 +23,10 @@ void main() {
     expect(d.map((e) => e.name), ['A.txt', 'b.txt']);
   });
   test('range download', () async {
-    final bytes = await a.download('x', '/Docs/b.txt', start: 1, endInclusive: 2).expand((e) => e).toList();
+    final bytes = await a
+        .download('x', '/Docs/b.txt', start: 1, endInclusive: 2)
+        .expand((e) => e)
+        .toList();
     expect(bytes, [2, 3]);
   });
   test('trash is recoverable; permanent delete is not', () async {
@@ -32,10 +35,16 @@ void main() {
     a.restore('x', '/root.txt');
     expect((await a.listChildren('x', '/')).items.length, 2);
     await a.permanentDelete('x', '/root.txt');
-    await expectLater(a.metadata('x', '/root.txt'), throwsA(isA<ProviderHttpError>()));
+    await expectLater(
+      a.metadata('x', '/root.txt'),
+      throwsA(isA<ProviderHttpError>()),
+    );
   });
   test('move never overwrites silently', () async {
-    await expectLater(a.move('x', '/root.txt', '/Docs', 'A.txt'), throwsA(isA<ProviderHttpError>()));
+    await expectLater(
+      a.move('x', '/root.txt', '/Docs', 'A.txt'),
+      throwsA(isA<ProviderHttpError>()),
+    );
     await a.move('x', '/root.txt', '/Docs', 'moved.txt');
     expect((await a.metadata('x', '/Docs/moved.txt')).size, 2);
   });

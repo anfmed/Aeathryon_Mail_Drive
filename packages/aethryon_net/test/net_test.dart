@@ -1,4 +1,5 @@
 import 'dart:math';
+
 import 'package:aethryon_net/aethryon_net.dart';
 import 'package:test/test.dart';
 
@@ -21,8 +22,10 @@ void main() {
     for (var a = 1; a < 30; a++) {
       expect(p.delayFor(a, random: r) <= const Duration(seconds: 10), isTrue);
     }
-    expect(p.delayFor(1, random: r, retryAfter: const Duration(seconds: 99)),
-        const Duration(seconds: 10));
+    expect(
+      p.delayFor(1, random: r, retryAfter: const Duration(seconds: 99)),
+      const Duration(seconds: 10),
+    );
   });
   test('retry succeeds after transient failures', () async {
     var calls = 0;

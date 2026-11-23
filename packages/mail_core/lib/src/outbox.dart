@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+
 import 'package:aethryon_net/aethryon_net.dart';
 
 enum OutboxState { pending, sending, sent, failedRetryable, failedPermanent }
@@ -17,23 +18,29 @@ class OutboxItem {
     this.nextAttemptUtc,
   });
 
-  OutboxItem copyWith({OutboxState? state, int? attempts, DateTime? nextAttemptUtc}) =>
-      OutboxItem(
-        id: id,
-        accountId: accountId,
-        state: state ?? this.state,
-        attempts: attempts ?? this.attempts,
-        nextAttemptUtc: nextAttemptUtc ?? this.nextAttemptUtc,
-      );
+  OutboxItem copyWith({
+    OutboxState? state,
+    int? attempts,
+    DateTime? nextAttemptUtc,
+  }) => OutboxItem(
+    id: id,
+    accountId: accountId,
+    state: state ?? this.state,
+    attempts: attempts ?? this.attempts,
+    nextAttemptUtc: nextAttemptUtc ?? this.nextAttemptUtc,
+  );
 }
 
 /// Items due for sending now. A `sending` item is never re-picked (prevents
 /// duplicate sends after a crash only if the caller resets stale `sending`
 /// items explicitly — see [recoverStaleSending]).
 List<OutboxItem> dueItems(List<OutboxItem> items, DateTime nowUtc) => items
-    .where((i) =>
-        (i.state == OutboxState.pending || i.state == OutboxState.failedRetryable) &&
-        (i.nextAttemptUtc == null || !i.nextAttemptUtc!.isAfter(nowUtc)))
+    .where(
+      (i) =>
+          (i.state == OutboxState.pending ||
+              i.state == OutboxState.failedRetryable) &&
+          (i.nextAttemptUtc == null || !i.nextAttemptUtc!.isAfter(nowUtc)),
+    )
     .toList();
 
 OutboxItem onSendFailure(
@@ -44,12 +51,20 @@ OutboxItem onSendFailure(
   math.Random? random,
 }) {
   final attempts = item.attempts + 1;
-  if (kind == FailureKind.permanent || kind == FailureKind.auth || attempts >= policy.maxAttempts) {
-    return item.copyWith(state: OutboxState.failedPermanent, attempts: attempts);
+  if (kind == FailureKind.permanent ||
+      kind == FailureKind.auth ||
+      attempts >= policy.maxAttempts) {
+    return item.copyWith(
+      state: OutboxState.failedPermanent,
+      attempts: attempts,
+    );
   }
   final d = policy.delayFor(attempts, random: random ?? math.Random());
   return item.copyWith(
-      state: OutboxState.failedRetryable, attempts: attempts, nextAttemptUtc: nowUtc.add(d));
+    state: OutboxState.failedRetryable,
+    attempts: attempts,
+    nextAttemptUtc: nowUtc.add(d),
+  );
 }
 
 /// After an app crash an item may be stuck in `sending`. We DO NOT auto-resend

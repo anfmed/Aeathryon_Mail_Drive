@@ -19,8 +19,11 @@ const body = '''<?xml version="1.0"?>
 
 void main() {
   test('parses files and folders, skips self', () {
-    final n = parsePropfind(body,
-        accountId: 'acc', requestedPath: '/remote.php/dav/files/u/Docs/');
+    final n = parsePropfind(
+      body,
+      accountId: 'acc',
+      requestedPath: '/remote.php/dav/files/u/Docs/',
+    );
     expect(n.length, 2);
     final f = n.firstWhere((e) => !e.isFolder);
     expect(f.name, 'My File.txt');

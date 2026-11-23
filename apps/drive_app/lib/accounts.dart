@@ -14,24 +14,34 @@ class DriveAccounts {
   final AccountVault vault;
   final MemoryStorageAdapter demo = buildDemoAdapter();
   final Map<String, StorageAdapter> _cache = {};
-  DriveAccounts(SecureStore store) : vault = AccountVault(store, 'aethryon.drive');
+  DriveAccounts(SecureStore store)
+    : vault = AccountVault(store, 'aethryon.drive');
 
   Future<List<AccountRecord>> list() => vault.list();
 
-  static WebDavAdapter buildWebDav(String url, String user, Future<String?> Function() password) =>
-      WebDavAdapter(
-        baseUrl: Uri.parse(url),
-        authorizationHeader: (_) async {
-          final pw = await password() ?? '';
-          return 'Basic ${base64Encode(utf8.encode('$user:$pw'))}';
-        },
-      );
+  static WebDavAdapter buildWebDav(
+    String url,
+    String user,
+    Future<String?> Function() password,
+  ) => WebDavAdapter(
+    baseUrl: Uri.parse(url),
+    authorizationHeader: (_) async {
+      final pw = await password() ?? '';
+      return 'Basic ${base64Encode(utf8.encode('$user:$pw'))}';
+    },
+  );
 
   StorageAdapter adapterFor(String id, List<AccountRecord> records) {
     if (id == demoAccount) return demo;
     final r = records.firstWhere((e) => e.id == id);
     return _cache.putIfAbsent(
-        id, () => buildWebDav(r.settings['url']!, r.settings['username']!, () => vault.secret(id)));
+      id,
+      () => buildWebDav(
+        r.settings['url']!,
+        r.settings['username']!,
+        () => vault.secret(id),
+      ),
+    );
   }
 
   Future<void> remove(String id) async {
@@ -48,7 +58,8 @@ String explainError(Object e) {
     if (e.statusCode == 404) return 'This folder was not found on the server.';
     return 'The server answered with an error (HTTP ${e.statusCode}).';
   }
-  if (e is RetryExhausted) return 'The server did not respond. Check your connection and the address.';
+  if (e is RetryExhausted)
+    return 'The server did not respond. Check your connection and the address.';
   return 'Could not reach the server.';
 }
 
@@ -75,10 +86,17 @@ class AccountsScreen extends StatelessWidget {
       builder: (c) => AlertDialog(
         title: Text('Remove "${r.label}"?'),
         content: const Text(
-            'This only removes the account from this device. Your files on the server are not touched.'),
+          'This only removes the account from this device. Your files on the server are not touched.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Remove')),
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: const Text('Remove'),
+          ),
         ],
       ),
     );
@@ -94,32 +112,37 @@ class AccountsScreen extends StatelessWidget {
         label: const Text('Add account'),
         onPressed: () async {
           final ok = await Navigator.of(context).push<bool>(
-              MaterialPageRoute<bool>(builder: (_) => AddWebDavScreen(vault: vault)));
+            MaterialPageRoute<bool>(
+              builder: (_) => AddWebDavScreen(vault: vault),
+            ),
+          );
           if (ok == true) await onChanged();
         },
       ),
-      body: ListView(children: [
-        ListTile(
-          leading: const Icon(Icons.science_outlined),
-          title: const Text('Demo account'),
-          subtitle: const Text('In-memory sample files'),
-          selected: selected == demoAccount,
-          onTap: () => onSelect(demoAccount),
-        ),
-        for (final r in records)
+      body: ListView(
+        children: [
           ListTile(
-            leading: const Icon(Icons.cloud_outlined),
-            title: Text(r.label),
-            subtitle: Text(Uri.tryParse(r.settings['url'] ?? '')?.host ?? ''),
-            selected: selected == r.id,
-            onTap: () => onSelect(r.id),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete_outline),
-              tooltip: 'Remove ${r.label}',
-              onPressed: () => _confirmRemove(context, r),
-            ),
+            leading: const Icon(Icons.science_outlined),
+            title: const Text('Demo account'),
+            subtitle: const Text('In-memory sample files'),
+            selected: selected == demoAccount,
+            onTap: () => onSelect(demoAccount),
           ),
-      ]),
+          for (final r in records)
+            ListTile(
+              leading: const Icon(Icons.cloud_outlined),
+              title: Text(r.label),
+              subtitle: Text(Uri.tryParse(r.settings['url'] ?? '')?.host ?? ''),
+              selected: selected == r.id,
+              onTap: () => onSelect(r.id),
+              trailing: IconButton(
+                icon: const Icon(Icons.delete_outline),
+                tooltip: 'Remove ${r.label}',
+                onPressed: () => _confirmRemove(context, r),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -154,7 +177,8 @@ class _AddWebDavScreenState extends State<AddWebDavScreen> {
     final u = validateServerUrl(_url.text);
     if (u != null) return u;
     if (_user.text.trim().isEmpty) return 'Enter the username.';
-    if (_password.text.isEmpty) return 'Enter the password (an app password is best).';
+    if (_password.text.isEmpty)
+      return 'Enter the password (an app password is best).';
     return null;
   }
 
@@ -173,9 +197,14 @@ class _AddWebDavScreenState extends State<AddWebDavScreen> {
       _info = null;
     });
     try {
-      final a = DriveAccounts.buildWebDav(_url.text.trim(), _user.text.trim(), () async => _password.text);
+      final a = DriveAccounts.buildWebDav(
+        _url.text.trim(),
+        _user.text.trim(),
+        () async => _password.text,
+      );
       final page = await a.listChildren('test', '/');
-      if (mounted) setState(() => _info = 'Connected. Found ${page.items.length} items.');
+      if (mounted)
+        setState(() => _info = 'Connected. Found ${page.items.length} items.');
     } catch (e) {
       if (mounted) setState(() => _error = explainError(e));
     } finally {
@@ -211,32 +240,64 @@ class _AddWebDavScreenState extends State<AddWebDavScreen> {
       appBar: AppBar(title: const Text('Add WebDAV / Nextcloud')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(Space.l),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Nextcloud: use https://YOUR-SERVER/remote.php/dav/files/USERNAME/ and an app password '
-              '(created in your Nextcloud security settings).'),
-          const SizedBox(height: Space.m),
-          TextField(key: const Key('label'), controller: _label, decoration: const InputDecoration(labelText: 'Name')),
-          TextField(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Nextcloud: use https://YOUR-SERVER/remote.php/dav/files/USERNAME/ and an app password '
+              '(created in your Nextcloud security settings).',
+            ),
+            const SizedBox(height: Space.m),
+            TextField(
+              key: const Key('label'),
+              controller: _label,
+              decoration: const InputDecoration(labelText: 'Name'),
+            ),
+            TextField(
               key: const Key('url'),
               controller: _url,
               keyboardType: TextInputType.url,
-              decoration: const InputDecoration(labelText: 'Server address (https://…)')),
-          TextField(key: const Key('user'), controller: _user, decoration: const InputDecoration(labelText: 'Username')),
-          TextField(
+              decoration: const InputDecoration(
+                labelText: 'Server address (https://…)',
+              ),
+            ),
+            TextField(
+              key: const Key('user'),
+              controller: _user,
+              decoration: const InputDecoration(labelText: 'Username'),
+            ),
+            TextField(
               key: const Key('password'),
               controller: _password,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Password / app password')),
-          const SizedBox(height: Space.m),
-          if (_error != null) Text(_error!, key: const Key('error'), style: TextStyle(color: Theme.of(context).colorScheme.error)),
-          if (_info != null) Text(_info!, key: const Key('info')),
-          const SizedBox(height: Space.m),
-          Row(children: [
-            OutlinedButton(onPressed: _busy ? null : _test, child: const Text('Test connection')),
-            const SizedBox(width: Space.m),
-            FilledButton(onPressed: _busy ? null : _save, child: const Text('Save')),
-          ]),
-        ]),
+              decoration: const InputDecoration(
+                labelText: 'Password / app password',
+              ),
+            ),
+            const SizedBox(height: Space.m),
+            if (_error != null)
+              Text(
+                _error!,
+                key: const Key('error'),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            if (_info != null) Text(_info!, key: const Key('info')),
+            const SizedBox(height: Space.m),
+            Row(
+              children: [
+                OutlinedButton(
+                  onPressed: _busy ? null : _test,
+                  child: const Text('Test connection'),
+                ),
+                const SizedBox(width: Space.m),
+                FilledButton(
+                  onPressed: _busy ? null : _save,
+                  child: const Text('Save'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

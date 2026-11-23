@@ -18,12 +18,19 @@ class MailSession {
 class MailAccounts {
   final AccountVault vault;
   final Map<String, MailSession> _sessions = {};
-  MailAccounts(SecureStore store) : vault = AccountVault(store, 'aethryon.mail');
+  MailAccounts(SecureStore store)
+    : vault = AccountVault(store, 'aethryon.mail');
 
   Future<List<AccountRecord>> list() => vault.list();
 
   MailSession demoSession() => _sessions.putIfAbsent(
-      demoAccount, () => MailSession(buildDemoTransport(), MemoryMailStore(), 'demo@example.invalid'));
+    demoAccount,
+    () => MailSession(
+      buildDemoTransport(),
+      MemoryMailStore(),
+      'demo@example.invalid',
+    ),
+  );
 
   MailSession sessionFor(String id, List<AccountRecord> records) {
     if (id == demoAccount) return demoSession();
@@ -39,7 +46,9 @@ class MailAccounts {
           smtpSecure: s['smtpSecure'] == 'true',
           username: s['username']!,
         ),
-        () async => (await vault.secret(id)) ?? '', // password is read only at connect time
+        () async =>
+            (await vault.secret(id)) ??
+            '', // password is read only at connect time
       );
       return MailSession(transport, MemoryMailStore(), s['username']!);
     });
@@ -52,7 +61,8 @@ class MailAccounts {
 }
 
 bool get isMobilePlatform =>
-    defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS;
+    defaultTargetPlatform == TargetPlatform.android ||
+    defaultTargetPlatform == TargetPlatform.iOS;
 
 class AccountsScreen extends StatelessWidget {
   final List<AccountRecord> records;
@@ -76,10 +86,18 @@ class AccountsScreen extends StatelessWidget {
       context: context,
       builder: (c) => AlertDialog(
         title: Text('Remove "${r.label}"?'),
-        content: const Text('This only removes the account from this device. Your mailbox is not touched.'),
+        content: const Text(
+          'This only removes the account from this device. Your mailbox is not touched.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Remove')),
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: const Text('Remove'),
+          ),
         ],
       ),
     );
@@ -94,33 +112,38 @@ class AccountsScreen extends StatelessWidget {
         icon: const Icon(Icons.add),
         label: const Text('Add account'),
         onPressed: () async {
-          final ok = await Navigator.of(context)
-              .push<bool>(MaterialPageRoute<bool>(builder: (_) => AddMailScreen(vault: vault)));
+          final ok = await Navigator.of(context).push<bool>(
+            MaterialPageRoute<bool>(
+              builder: (_) => AddMailScreen(vault: vault),
+            ),
+          );
           if (ok == true) await onChanged();
         },
       ),
-      body: ListView(children: [
-        ListTile(
-          leading: const Icon(Icons.science_outlined),
-          title: const Text('Demo account'),
-          subtitle: const Text('In-memory sample mail'),
-          selected: selected == demoAccount,
-          onTap: () => onSelect(demoAccount),
-        ),
-        for (final r in records)
+      body: ListView(
+        children: [
           ListTile(
-            leading: const Icon(Icons.alternate_email),
-            title: Text(r.label),
-            subtitle: Text(r.settings['username'] ?? ''),
-            selected: selected == r.id,
-            onTap: () => onSelect(r.id),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete_outline),
-              tooltip: 'Remove ${r.label}',
-              onPressed: () => _confirmRemove(context, r),
-            ),
+            leading: const Icon(Icons.science_outlined),
+            title: const Text('Demo account'),
+            subtitle: const Text('In-memory sample mail'),
+            selected: selected == demoAccount,
+            onTap: () => onSelect(demoAccount),
           ),
-      ]),
+          for (final r in records)
+            ListTile(
+              leading: const Icon(Icons.alternate_email),
+              title: Text(r.label),
+              subtitle: Text(r.settings['username'] ?? ''),
+              selected: selected == r.id,
+              onTap: () => onSelect(r.id),
+              trailing: IconButton(
+                icon: const Icon(Icons.delete_outline),
+                tooltip: 'Remove ${r.label}',
+                onPressed: () => _confirmRemove(context, r),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -145,7 +168,15 @@ class _AddMailScreenState extends State<AddMailScreen> {
 
   @override
   void dispose() {
-    for (final c in [_label, _user, _imapHost, _imapPort, _smtpHost, _smtpPort, _password]) {
+    for (final c in [
+      _label,
+      _user,
+      _imapHost,
+      _imapPort,
+      _smtpHost,
+      _smtpPort,
+      _password,
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -164,9 +195,13 @@ class _AddMailScreenState extends State<AddMailScreen> {
 
   String? _validate() {
     if (_label.text.trim().isEmpty) return 'Give this account a name.';
-    if (!_user.text.contains('@')) return 'Enter the full e-mail address as the username.';
-    if (_imapHost.text.trim().isEmpty || _smtpHost.text.trim().isEmpty) return 'Enter the IMAP and SMTP server names.';
-    if (int.tryParse(_imapPort.text) == null || int.tryParse(_smtpPort.text) == null) return 'Ports must be numbers.';
+    if (!_user.text.contains('@'))
+      return 'Enter the full e-mail address as the username.';
+    if (_imapHost.text.trim().isEmpty || _smtpHost.text.trim().isEmpty)
+      return 'Enter the IMAP and SMTP server names.';
+    if (int.tryParse(_imapPort.text) == null ||
+        int.tryParse(_smtpPort.text) == null)
+      return 'Ports must be numbers.';
     if (_password.text.isEmpty) return 'Enter the app password.';
     return null;
   }
@@ -205,39 +240,97 @@ class _AddMailScreenState extends State<AddMailScreen> {
       appBar: AppBar(title: const Text('Add mail account')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(Space.l),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          DropdownButtonFormField<String>(
-            key: const Key('profile'),
-            initialValue: _profile.id,
-            decoration: const InputDecoration(labelText: 'Provider'),
-            items: [for (final p in profiles) DropdownMenuItem(value: p.id, child: Text(p.displayName))],
-            onChanged: (v) => _pick(profileById(v!)!),
-          ),
-          if (_profile.userNote != null) Padding(padding: const EdgeInsets.only(top: Space.s), child: Text(_profile.userNote!)),
-          if (!_profile.hostsVerified && _profile.imap != null)
-            const Padding(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DropdownButtonFormField<String>(
+              key: const Key('profile'),
+              initialValue: _profile.id,
+              decoration: const InputDecoration(labelText: 'Provider'),
+              items: [
+                for (final p in profiles)
+                  DropdownMenuItem(value: p.id, child: Text(p.displayName)),
+              ],
+              onChanged: (v) => _pick(profileById(v!)!),
+            ),
+            if (_profile.userNote != null)
+              Padding(
+                padding: const EdgeInsets.only(top: Space.s),
+                child: Text(_profile.userNote!),
+              ),
+            if (!_profile.hostsVerified && _profile.imap != null)
+              const Padding(
                 padding: EdgeInsets.only(top: Space.s),
-                child: Text('These server names are suggestions — please confirm them with your provider.')),
-          if (blocked != null)
-            Padding(
+                child: Text(
+                  'These server names are suggestions — please confirm them with your provider.',
+                ),
+              ),
+            if (blocked != null)
+              Padding(
                 padding: const EdgeInsets.only(top: Space.m),
-                child: Text(blocked, key: const Key('blocked'), style: TextStyle(color: Theme.of(context).colorScheme.error))),
-          TextField(key: const Key('label'), controller: _label, decoration: const InputDecoration(labelText: 'Name')),
-          TextField(
+                child: Text(
+                  blocked,
+                  key: const Key('blocked'),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            TextField(
+              key: const Key('label'),
+              controller: _label,
+              decoration: const InputDecoration(labelText: 'Name'),
+            ),
+            TextField(
               key: const Key('user'),
               controller: _user,
               keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(labelText: 'E-mail address (username)')),
-          TextField(key: const Key('imapHost'), controller: _imapHost, decoration: const InputDecoration(labelText: 'IMAP server')),
-          TextField(key: const Key('imapPort'), controller: _imapPort, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'IMAP port (SSL)')),
-          TextField(key: const Key('smtpHost'), controller: _smtpHost, decoration: const InputDecoration(labelText: 'SMTP server')),
-          TextField(key: const Key('smtpPort'), controller: _smtpPort, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'SMTP port (465 = SSL)')),
-          TextField(key: const Key('password'), controller: _password, obscureText: true, decoration: const InputDecoration(labelText: 'App password')),
-          const SizedBox(height: Space.m),
-          if (_error != null) Text(_error!, key: const Key('error'), style: TextStyle(color: Theme.of(context).colorScheme.error)),
-          const SizedBox(height: Space.m),
-          FilledButton(onPressed: blocked == null ? _save : null, child: const Text('Save')),
-        ]),
+              decoration: const InputDecoration(
+                labelText: 'E-mail address (username)',
+              ),
+            ),
+            TextField(
+              key: const Key('imapHost'),
+              controller: _imapHost,
+              decoration: const InputDecoration(labelText: 'IMAP server'),
+            ),
+            TextField(
+              key: const Key('imapPort'),
+              controller: _imapPort,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'IMAP port (SSL)'),
+            ),
+            TextField(
+              key: const Key('smtpHost'),
+              controller: _smtpHost,
+              decoration: const InputDecoration(labelText: 'SMTP server'),
+            ),
+            TextField(
+              key: const Key('smtpPort'),
+              controller: _smtpPort,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'SMTP port (465 = SSL)',
+              ),
+            ),
+            TextField(
+              key: const Key('password'),
+              controller: _password,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'App password'),
+            ),
+            const SizedBox(height: Space.m),
+            if (_error != null)
+              Text(
+                _error!,
+                key: const Key('error'),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            const SizedBox(height: Space.m),
+            FilledButton(
+              onPressed: blocked == null ? _save : null,
+              child: const Text('Save'),
+            ),
+          ],
+        ),
       ),
     );
   }
