@@ -21,10 +21,13 @@ class FakeOpener implements UrlOpener {
   Future<void> open(Uri url) async {}
 }
 
-MailServices testServices({MemorySecureStore? store, Future<MailDb> Function()? openDb}) => MailServices(
-      secureStore: store ?? MemorySecureStore(),
-      files: FakeFiles(),
-      opener: FakeOpener(),
-      httpClient: MockClient((_) async => http.Response('{}', 200)),
-      openDb: openDb ?? () async => const MailDb(problem: 'disabled in tests'),
-    );
+MailServices testServices({
+  MemorySecureStore? store,
+  Future<MailDb> Function()? openDb,
+}) => MailServices(
+  secureStore: store ?? MemorySecureStore(),
+  files: FakeFiles(),
+  opener: FakeOpener(),
+  httpClient: MockClient((_) async => http.Response('{}', 200)),
+  openDb: openDb ?? () async => const MailDb(problem: 'disabled in tests'),
+);

@@ -21,10 +21,13 @@ class FakeOpener implements UrlOpener {
   Future<void> open(Uri url) async {}
 }
 
-DriveServices testServices({MemorySecureStore? store, Future<DriveDb> Function()? openDb}) => DriveServices(
-      secureStore: store ?? MemorySecureStore(),
-      files: FakeFiles(),
-      opener: FakeOpener(),
-      httpClient: MockClient((_) async => http.Response('{}', 200)),
-      openDb: openDb ?? () async => const DriveDb(problem: 'disabled in tests'),
-    );
+DriveServices testServices({
+  MemorySecureStore? store,
+  Future<DriveDb> Function()? openDb,
+}) => DriveServices(
+  secureStore: store ?? MemorySecureStore(),
+  files: FakeFiles(),
+  opener: FakeOpener(),
+  httpClient: MockClient((_) async => http.Response('{}', 200)),
+  openDb: openDb ?? () async => const DriveDb(problem: 'disabled in tests'),
+);

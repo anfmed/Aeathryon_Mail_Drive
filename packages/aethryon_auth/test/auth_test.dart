@@ -16,13 +16,17 @@ void main() {
   });
   test('refresh skew', () {
     final t = TokenSet(
-        accessToken: 'a', expiresAtUtc: DateTime.utc(2026, 1, 1, 0, 10));
+      accessToken: 'a',
+      expiresAtUtc: DateTime.utc(2026, 1, 1, 0, 10),
+    );
     expect(t.needsRefresh(DateTime.utc(2026, 1, 1, 0, 0)), isFalse);
     expect(t.needsRefresh(DateTime.utc(2026, 1, 1, 0, 9, 30)), isTrue);
   });
   test('toString leaks nothing', () {
     final t = TokenSet(
-        accessToken: 'SECRETTOKEN', expiresAtUtc: DateTime.utc(2026));
+      accessToken: 'SECRETTOKEN',
+      expiresAtUtc: DateTime.utc(2026),
+    );
     expect(t.toString().contains('SECRETTOKEN'), isFalse);
   });
 }

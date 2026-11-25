@@ -16,26 +16,37 @@ class DriveAccounts {
   final AccountVault vault;
   final MemoryStorageAdapter demo = buildDemoAdapter();
   final Map<String, StorageAdapter> _cache = {};
-  DriveAccounts(this.services) : vault = AccountVault(services.secureStore, 'aethryon.drive');
+  DriveAccounts(this.services)
+    : vault = AccountVault(services.secureStore, 'aethryon.drive');
 
   Future<List<AccountRecord>> list() => vault.list();
 
-  static WebDavAdapter buildWebDav(String url, String user, Future<String?> Function() password) => WebDavAdapter(
-        baseUrl: Uri.parse(url),
-        authorizationHeader: (_) async {
-          final pw = await password() ?? '';
-          return 'Basic ${base64Encode(utf8.encode('$user:$pw'))}';
-        },
-      );
+  static WebDavAdapter buildWebDav(
+    String url,
+    String user,
+    Future<String?> Function() password,
+  ) => WebDavAdapter(
+    baseUrl: Uri.parse(url),
+    authorizationHeader: (_) async {
+      final pw = await password() ?? '';
+      return 'Basic ${base64Encode(utf8.encode('$user:$pw'))}';
+    },
+  );
 
   StorageAdapter adapterFor(String id, List<AccountRecord> records) {
     if (id == demoAccount) return demo;
     final r = records.firstWhere((e) => e.id == id);
     return _cache.putIfAbsent(id, () {
       if (r.kind == 'webdav') {
-        return buildWebDav(r.settings['url']!, r.settings['username']!, () => vault.secret(id));
+        return buildWebDav(
+          r.settings['url']!,
+          r.settings['username']!,
+          () => vault.secret(id),
+        );
       }
-      final cfg = oauthProviderById(r.kind == 'dropbox' ? 'dropbox' : 'microsoft_onedrive')!;
+      final cfg = oauthProviderById(
+        r.kind == 'dropbox' ? 'dropbox' : 'microsoft_onedrive',
+      )!;
       final src = OAuthTokenSource(
         tokens: SecureTokenStore(services.secureStore, 'aethryon.drive'),
         client: services.httpClient,
@@ -44,8 +55,14 @@ class DriveAccounts {
         clientSecretProvider: () => vault.secret(id),
       );
       return r.kind == 'dropbox'
-          ? DropboxAdapter(accessToken: src.accessToken, client: services.httpClient)
-          : OneDriveAdapter(accessToken: src.accessToken, client: services.httpClient);
+          ? DropboxAdapter(
+              accessToken: src.accessToken,
+              client: services.httpClient,
+            )
+          : OneDriveAdapter(
+              accessToken: src.accessToken,
+              client: services.httpClient,
+            );
     });
   }
 
@@ -58,11 +75,11 @@ class DriveAccounts {
 }
 
 String kindLabel(String kind) => switch (kind) {
-      'webdav' => 'WebDAV / Nextcloud',
-      'dropbox' => 'Dropbox (experimental)',
-      'onedrive' => 'OneDrive (experimental)',
-      _ => kind,
-    };
+  'webdav' => 'WebDAV / Nextcloud',
+  'dropbox' => 'Dropbox (experimental)',
+  'onedrive' => 'OneDrive (experimental)',
+  _ => kind,
+};
 
 class AccountsScreen extends StatelessWidget {
   final DriveAccounts accounts;
@@ -89,10 +106,17 @@ class AccountsScreen extends StatelessWidget {
       builder: (c) => AlertDialog(
         title: Text('Remove "${r.label}"?'),
         content: const Text(
-            'This removes the account, its saved password/sign-in and its offline copy from this device. Your files on the server are not touched.'),
+          'This removes the account, its saved password/sign-in and its offline copy from this device. Your files on the server are not touched.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Remove')),
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: const Text('Remove'),
+          ),
         ],
       ),
     );
@@ -100,7 +124,10 @@ class AccountsScreen extends StatelessWidget {
   }
 
   Future<void> _selfTest(BuildContext context, AccountRecord r) async {
-    await showDialog<void>(context: context, builder: (c) => _SelfTestDialog(accounts: accounts, record: r));
+    await showDialog<void>(
+      context: context,
+      builder: (c) => _SelfTestDialog(accounts: accounts, record: r),
+    );
   }
 
   @override
@@ -111,40 +138,51 @@ class AccountsScreen extends StatelessWidget {
         icon: const Icon(Icons.add),
         label: const Text('Add account'),
         onPressed: () async {
-          final ok = await Navigator.of(context).push<bool>(MaterialPageRoute<bool>(
-              builder: (_) => AddAccountScreen(accounts: accounts, experimental: experimental)));
+          final ok = await Navigator.of(context).push<bool>(
+            MaterialPageRoute<bool>(
+              builder: (_) => AddAccountScreen(
+                accounts: accounts,
+                experimental: experimental,
+              ),
+            ),
+          );
           if (ok == true) await onChanged();
         },
       ),
-      body: ListView(children: [
-        ListTile(
-          leading: const Icon(Icons.science_outlined),
-          title: const Text('Demo account'),
-          subtitle: const Text('In-memory sample files'),
-          selected: selected == demoAccount,
-          onTap: () => onSelect(demoAccount),
-        ),
-        for (final r in records)
+      body: ListView(
+        children: [
           ListTile(
-            leading: const Icon(Icons.cloud_outlined),
-            title: Text(r.label),
-            subtitle: Text(kindLabel(r.kind)),
-            selected: selected == r.id,
-            onTap: () => onSelect(r.id),
-            trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-              IconButton(
-                icon: const Icon(Icons.fact_check_outlined),
-                tooltip: 'Run self-test for ${r.label}',
-                onPressed: () => _selfTest(context, r),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline),
-                tooltip: 'Remove ${r.label}',
-                onPressed: () => _confirmRemove(context, r),
-              ),
-            ]),
+            leading: const Icon(Icons.science_outlined),
+            title: const Text('Demo account'),
+            subtitle: const Text('In-memory sample files'),
+            selected: selected == demoAccount,
+            onTap: () => onSelect(demoAccount),
           ),
-      ]),
+          for (final r in records)
+            ListTile(
+              leading: const Icon(Icons.cloud_outlined),
+              title: Text(r.label),
+              subtitle: Text(kindLabel(r.kind)),
+              selected: selected == r.id,
+              onTap: () => onSelect(r.id),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.fact_check_outlined),
+                    tooltip: 'Run self-test for ${r.label}',
+                    onPressed: () => _selfTest(context, r),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    tooltip: 'Remove ${r.label}',
+                    onPressed: () => _confirmRemove(context, r),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -181,60 +219,90 @@ class _SelfTestDialogState extends State<_SelfTestDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-        title: const Text('Account self-test'),
-        content: _result == null
-            ? const SizedBox(height: 48, child: Center(child: CircularProgressIndicator()))
-            : SingleChildScrollView(child: SelectableText(_result!)),
-        actions: [
-          if (_result != null)
-            TextButton(onPressed: () => Clipboard.setData(ClipboardData(text: _result!)), child: const Text('Copy')),
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
-        ],
-      );
+    title: const Text('Account self-test'),
+    content: _result == null
+        ? const SizedBox(
+            height: 48,
+            child: Center(child: CircularProgressIndicator()),
+          )
+        : SingleChildScrollView(child: SelectableText(_result!)),
+    actions: [
+      if (_result != null)
+        TextButton(
+          onPressed: () => Clipboard.setData(ClipboardData(text: _result!)),
+          child: const Text('Copy'),
+        ),
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Close'),
+      ),
+    ],
+  );
 }
 
 class AddAccountScreen extends StatelessWidget {
   final DriveAccounts accounts;
   final bool experimental;
-  const AddAccountScreen({super.key, required this.accounts, required this.experimental});
+  const AddAccountScreen({
+    super.key,
+    required this.accounts,
+    required this.experimental,
+  });
 
   Future<void> _go(BuildContext context, Widget screen) async {
-    final ok = await Navigator.of(context).push<bool>(MaterialPageRoute<bool>(builder: (_) => screen));
+    final ok = await Navigator.of(context)
+        .push<bool>(MaterialPageRoute<bool>(builder: (_) => screen));
     if (ok == true && context.mounted) Navigator.of(context).pop(true);
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Add account')),
-        body: ListView(children: [
+    appBar: AppBar(title: const Text('Add account')),
+    body: ListView(
+      children: [
+        ListTile(
+          leading: const Icon(Icons.dns_outlined),
+          title: const Text('WebDAV / Nextcloud'),
+          subtitle: const Text('Your own server. Use an app password.'),
+          onTap: () => _go(context, AddWebDavScreen(vault: accounts.vault)),
+        ),
+        if (experimental) ...[
           ListTile(
-            leading: const Icon(Icons.dns_outlined),
-            title: const Text('WebDAV / Nextcloud'),
-            subtitle: const Text('Your own server. Use an app password.'),
-            onTap: () => _go(context, AddWebDavScreen(vault: accounts.vault)),
+            leading: const Icon(Icons.science_outlined),
+            title: const Text('Dropbox (experimental)'),
+            subtitle: const Text(
+              'Not verified against a real account yet. Use the self-test.',
+            ),
+            onTap: () => _go(
+              context,
+              AddOAuthDriveScreen(accounts: accounts, kind: 'dropbox'),
+            ),
           ),
-          if (experimental) ...[
-            ListTile(
-              leading: const Icon(Icons.science_outlined),
-              title: const Text('Dropbox (experimental)'),
-              subtitle: const Text('Not verified against a real account yet. Use the self-test.'),
-              onTap: () => _go(context, AddOAuthDriveScreen(accounts: accounts, kind: 'dropbox')),
+          ListTile(
+            leading: const Icon(Icons.science_outlined),
+            title: const Text('OneDrive (experimental)'),
+            subtitle: const Text(
+              'Not verified against a real account yet. Use the self-test.',
             ),
-            ListTile(
-              leading: const Icon(Icons.science_outlined),
-              title: const Text('OneDrive (experimental)'),
-              subtitle: const Text('Not verified against a real account yet. Use the self-test.'),
-              onTap: () => _go(context, AddOAuthDriveScreen(accounts: accounts, kind: 'onedrive')),
+            onTap: () => _go(
+              context,
+              AddOAuthDriveScreen(accounts: accounts, kind: 'onedrive'),
             ),
-          ],
-        ]),
-      );
+          ),
+        ],
+      ],
+    ),
+  );
 }
 
 class AddOAuthDriveScreen extends StatefulWidget {
   final DriveAccounts accounts;
   final String kind; // 'dropbox' | 'onedrive'
-  const AddOAuthDriveScreen({super.key, required this.accounts, required this.kind});
+  const AddOAuthDriveScreen({
+    super.key,
+    required this.accounts,
+    required this.kind,
+  });
   @override
   State<AddOAuthDriveScreen> createState() => _AddOAuthDriveScreenState();
 }
@@ -255,25 +323,42 @@ class _AddOAuthDriveScreenState extends State<AddOAuthDriveScreen> {
   }
 
   Future<void> _signIn() async {
-    if (_label.text.trim().isEmpty) return setState(() => _error = 'Give this account a name.');
-    if (_clientId.text.trim().isEmpty) return setState(() => _error = 'Enter your app\'s client ID (see docs/GOOGLE_BYO_CLIENT_GUIDE.md for the idea).');
+    if (_label.text.trim().isEmpty)
+      return setState(() => _error = 'Give this account a name.');
+    if (_clientId.text.trim().isEmpty)
+      return setState(
+        () => _error = 'Enter your app\'s client ID (see docs/GOOGLE_BYO_CLIENT_GUIDE.md for the idea).',
+      );
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
       final s = widget.accounts.services;
-      final cfg = oauthProviderById(widget.kind == 'dropbox' ? 'dropbox' : 'microsoft_onedrive')!;
-      final secret = _clientSecret.text.trim().isEmpty ? null : _clientSecret.text.trim();
+      final cfg = oauthProviderById(
+        widget.kind == 'dropbox' ? 'dropbox' : 'microsoft_onedrive',
+      )!;
+      final secret = _clientSecret.text.trim().isEmpty
+          ? null
+          : _clientSecret.text.trim();
       final tokens = await oauthSignIn(
-        provider: cfg, clientId: _clientId.text.trim(), clientSecret: secret,
-        openUrl: s.opener.open, httpClient: s.httpClient,
+        provider: cfg,
+        clientId: _clientId.text.trim(),
+        clientSecret: secret,
+        openUrl: s.opener.open,
+        httpClient: s.httpClient,
       );
       final id = DateTime.now().microsecondsSinceEpoch.toString();
       await SecureTokenStore(s.secureStore, 'aethryon.drive').write(id, tokens);
       await widget.accounts.vault.save(
-          AccountRecord(id: id, kind: widget.kind, label: _label.text.trim(), settings: {'clientId': _clientId.text.trim()}),
-          secret: secret ?? '');
+        AccountRecord(
+          id: id,
+          kind: widget.kind,
+          label: _label.text.trim(),
+          settings: {'clientId': _clientId.text.trim()},
+        ),
+        secret: secret ?? '',
+      );
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
       if (mounted) setState(() => _error = explainError(e));
@@ -284,27 +369,53 @@ class _AddOAuthDriveScreenState extends State<AddOAuthDriveScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text('Add ${kindLabel(widget.kind)}')),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(Space.l),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('You create your own app registration with the provider and paste its client ID here. '
-                'Aethryon ships no shared client ID. Sign-in happens in your browser.'),
-            const SizedBox(height: Space.m),
-            TextField(key: const Key('label'), controller: _label, decoration: const InputDecoration(labelText: 'Name')),
-            TextField(key: const Key('clientId'), controller: _clientId, decoration: const InputDecoration(labelText: 'Client ID')),
-            TextField(
-                key: const Key('clientSecret'),
-                controller: _clientSecret,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: 'Client secret (only if the provider gave you one)')),
-            const SizedBox(height: Space.m),
-            if (_error != null) Text(_error!, key: const Key('error'), style: TextStyle(color: Theme.of(context).colorScheme.error)),
-            const SizedBox(height: Space.m),
-            FilledButton(onPressed: _busy ? null : _signIn, child: Text(_busy ? 'Waiting for the browser…' : 'Sign in with browser')),
-          ]),
-        ),
-      );
+    appBar: AppBar(title: Text('Add ${kindLabel(widget.kind)}')),
+    body: SingleChildScrollView(
+      padding: const EdgeInsets.all(Space.l),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'You create your own app registration with the provider and paste its client ID here. '
+            'Aethryon ships no shared client ID. Sign-in happens in your browser.',
+          ),
+          const SizedBox(height: Space.m),
+          TextField(
+            key: const Key('label'),
+            controller: _label,
+            decoration: const InputDecoration(labelText: 'Name'),
+          ),
+          TextField(
+            key: const Key('clientId'),
+            controller: _clientId,
+            decoration: const InputDecoration(labelText: 'Client ID'),
+          ),
+          TextField(
+            key: const Key('clientSecret'),
+            controller: _clientSecret,
+            obscureText: true,
+            decoration: const InputDecoration(
+              labelText: 'Client secret (only if the provider gave you one)',
+            ),
+          ),
+          const SizedBox(height: Space.m),
+          if (_error != null)
+            Text(
+              _error!,
+              key: const Key('error'),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          const SizedBox(height: Space.m),
+          FilledButton(
+            onPressed: _busy ? null : _signIn,
+            child: Text(
+              _busy ? 'Waiting for the browser…' : 'Sign in with browser',
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class AddWebDavScreen extends StatefulWidget {
@@ -337,7 +448,8 @@ class _AddWebDavScreenState extends State<AddWebDavScreen> {
     final u = validateServerUrl(_url.text);
     if (u != null) return u;
     if (_user.text.trim().isEmpty) return 'Enter the username.';
-    if (_password.text.isEmpty) return 'Enter the password (an app password is best).';
+    if (_password.text.isEmpty)
+      return 'Enter the password (an app password is best).';
     return null;
   }
 
@@ -356,9 +468,14 @@ class _AddWebDavScreenState extends State<AddWebDavScreen> {
       _info = null;
     });
     try {
-      final a = DriveAccounts.buildWebDav(_url.text.trim(), _user.text.trim(), () async => _password.text);
+      final a = DriveAccounts.buildWebDav(
+        _url.text.trim(),
+        _user.text.trim(),
+        () async => _password.text,
+      );
       final page = await a.listChildren('test', '/');
-      if (mounted) setState(() => _info = 'Connected. Found ${page.items.length} items.');
+      if (mounted)
+        setState(() => _info = 'Connected. Found ${page.items.length} items.');
     } catch (e) {
       if (mounted) setState(() => _error = explainError(e));
     } finally {
@@ -394,32 +511,64 @@ class _AddWebDavScreenState extends State<AddWebDavScreen> {
       appBar: AppBar(title: const Text('Add WebDAV / Nextcloud')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(Space.l),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Nextcloud: use https://YOUR-SERVER/remote.php/dav/files/USERNAME/ and an app password '
-              '(created in your Nextcloud security settings).'),
-          const SizedBox(height: Space.m),
-          TextField(key: const Key('label'), controller: _label, decoration: const InputDecoration(labelText: 'Name')),
-          TextField(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Nextcloud: use https://YOUR-SERVER/remote.php/dav/files/USERNAME/ and an app password '
+              '(created in your Nextcloud security settings).',
+            ),
+            const SizedBox(height: Space.m),
+            TextField(
+              key: const Key('label'),
+              controller: _label,
+              decoration: const InputDecoration(labelText: 'Name'),
+            ),
+            TextField(
               key: const Key('url'),
               controller: _url,
               keyboardType: TextInputType.url,
-              decoration: const InputDecoration(labelText: 'Server address (https://…)')),
-          TextField(key: const Key('user'), controller: _user, decoration: const InputDecoration(labelText: 'Username')),
-          TextField(
+              decoration: const InputDecoration(
+                labelText: 'Server address (https://…)',
+              ),
+            ),
+            TextField(
+              key: const Key('user'),
+              controller: _user,
+              decoration: const InputDecoration(labelText: 'Username'),
+            ),
+            TextField(
               key: const Key('password'),
               controller: _password,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Password / app password')),
-          const SizedBox(height: Space.m),
-          if (_error != null) Text(_error!, key: const Key('error'), style: TextStyle(color: Theme.of(context).colorScheme.error)),
-          if (_info != null) Text(_info!, key: const Key('info')),
-          const SizedBox(height: Space.m),
-          Row(children: [
-            OutlinedButton(onPressed: _busy ? null : _test, child: const Text('Test connection')),
-            const SizedBox(width: Space.m),
-            FilledButton(onPressed: _busy ? null : _save, child: const Text('Save')),
-          ]),
-        ]),
+              decoration: const InputDecoration(
+                labelText: 'Password / app password',
+              ),
+            ),
+            const SizedBox(height: Space.m),
+            if (_error != null)
+              Text(
+                _error!,
+                key: const Key('error'),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            if (_info != null) Text(_info!, key: const Key('info')),
+            const SizedBox(height: Space.m),
+            Row(
+              children: [
+                OutlinedButton(
+                  onPressed: _busy ? null : _test,
+                  child: const Text('Test connection'),
+                ),
+                const SizedBox(width: Space.m),
+                FilledButton(
+                  onPressed: _busy ? null : _save,
+                  child: const Text('Save'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

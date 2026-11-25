@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:aethryon_platform/aethryon_platform.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:path_provider/path_provider.dart';
@@ -23,7 +24,8 @@ class FlutterFilePlatform implements FilePlatform {
   }
 
   @override
-  Future<String> appDataDir() async => (await getApplicationSupportDirectory()).path;
+  Future<String> appDataDir() async =>
+      (await getApplicationSupportDirectory()).path;
 
   @override
   Future<String> downloadsDir() async {

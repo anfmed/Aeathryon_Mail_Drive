@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:aethryon_platform/aethryon_platform.dart';
 
 class AccountRecord {
@@ -6,21 +7,33 @@ class AccountRecord {
   final String kind; // 'webdav' | 'imap' | ...
   final String label;
   final Map<String, String> settings; // NON-secret only (validated)
-  AccountRecord({required this.id, required this.kind, required this.label, required this.settings}) {
+  AccountRecord({
+    required this.id,
+    required this.kind,
+    required this.label,
+    required this.settings,
+  }) {
     for (final k in settings.keys) {
       final l = k.toLowerCase();
-      if (l.contains('password') || l.contains('token') || l.contains('secret')) {
+      if (l.contains('password') ||
+          l.contains('token') ||
+          l.contains('secret')) {
         throw ArgumentError('settings must not contain secrets (key: $k)');
       }
     }
   }
-  Map<String, Object?> toJson() => {'id': id, 'kind': kind, 'label': label, 'settings': settings};
+  Map<String, Object?> toJson() => {
+    'id': id,
+    'kind': kind,
+    'label': label,
+    'settings': settings,
+  };
   factory AccountRecord.fromJson(Map<String, Object?> j) => AccountRecord(
-        id: j['id'] as String,
-        kind: j['kind'] as String,
-        label: j['label'] as String,
-        settings: Map<String, String>.from(j['settings'] as Map),
-      );
+    id: j['id'] as String,
+    kind: j['kind'] as String,
+    label: j['label'] as String,
+    settings: Map<String, String>.from(j['settings'] as Map),
+  );
 }
 
 /// Accounts live ONLY in the OS secure store. [namespace] keeps Drive and Mail apart.
@@ -43,7 +56,12 @@ class AccountVault {
     final out = <AccountRecord>[];
     for (final id in await _ids()) {
       final v = await store.read(_rec(id));
-      if (v != null) out.add(AccountRecord.fromJson(Map<String, Object?>.from(jsonDecode(v) as Map)));
+      if (v != null)
+        out.add(
+          AccountRecord.fromJson(
+            Map<String, Object?>.from(jsonDecode(v) as Map),
+          ),
+        );
     }
     return out;
   }
