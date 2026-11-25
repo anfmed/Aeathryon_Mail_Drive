@@ -5,7 +5,6 @@ class OAuthProviderConfig {
   final Uri tokenEndpoint;
   final List<String> scopes;
   final Map<String, String> extraAuthParams;
-
   /// Scope strings backed by a Phase-0 primary source (S-ids). Endpoint URLs are
   /// from general knowledge and NOT yet verified against official pages.
   final List<String> scopeSources;
@@ -27,12 +26,8 @@ final oauthProviders = <OAuthProviderConfig>[
   OAuthProviderConfig(
     id: 'microsoft_mail',
     displayName: 'Outlook / Microsoft 365 (mail)',
-    authEndpoint: Uri.parse(
-      'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-    ),
-    tokenEndpoint: Uri.parse(
-      'https://login.microsoftonline.com/common/oauth2/v2.0/token',
-    ),
+    authEndpoint: Uri.parse('https://login.microsoftonline.com/common/oauth2/v2.0/authorize'),
+    tokenEndpoint: Uri.parse('https://login.microsoftonline.com/common/oauth2/v2.0/token'),
     scopes: const [
       'https://outlook.office.com/IMAP.AccessAsUser.All',
       'https://outlook.office.com/SMTP.Send',
@@ -43,12 +38,8 @@ final oauthProviders = <OAuthProviderConfig>[
   OAuthProviderConfig(
     id: 'microsoft_onedrive',
     displayName: 'OneDrive',
-    authEndpoint: Uri.parse(
-      'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-    ),
-    tokenEndpoint: Uri.parse(
-      'https://login.microsoftonline.com/common/oauth2/v2.0/token',
-    ),
+    authEndpoint: Uri.parse('https://login.microsoftonline.com/common/oauth2/v2.0/authorize'),
+    tokenEndpoint: Uri.parse('https://login.microsoftonline.com/common/oauth2/v2.0/token'),
     scopes: const ['Files.ReadWrite', 'offline_access'],
     scopeSources: const ['S11'],
   ),

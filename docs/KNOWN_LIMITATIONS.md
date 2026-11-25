@@ -1,18 +1,19 @@
-# KNOWN_LIMITATIONS (Phase ১–৭ পর্যন্ত, খোলাখুলি)
-## প্রমাণিত (আসল CI-রান থেকে, আপনার রিপোর্ট অনুযায়ী)
-- Phase ১–৫-এর কোড compile হয়েছে; check (analyze+test) ও Android+Windows build **সবুজ**। একমাত্র লাল ছিল `webdav-live` (ঐচ্ছিক)।
-- সেই লালের **নিশ্চিত কারণ** (CI-লগ): retry একই, ইতিমধ্যে-ব্যবহৃত body-stream আবার পড়ছিল (`Stream has already been listened to`) — আমার adapter-bug। প্রথম ত্রুটি (`HttpException: unsolicited response`) এর কারণ **অনুমান**: body-ছাড়া request chunked-encoding-এ যাচ্ছিল। দুটোরই ফিক্স Phase ৬-এ; **ফিক্স এখনো CI-তে চালানো হয়নি**।
-## Phase ৬–৭-এর কোড: অ-কম্পাইলকৃত ও অপরীক্ষিত
-1. **এই ধাপের সব নতুন Dart কোড** (আসল-account UI, vault, adapter, runner, OAuth sign-in) compile/test হয়নি — প্রথম CI-রানই যাচাই। Python-এ শুধু হিসাব-যুক্তি (chunk-ভাগ, resume-নিয়ম, Dropbox call-ক্রম, URL-নিয়ম, ascii-escape, blocked-matrix) মেলানো হয়েছে।
-2. **Dropbox ও OneDrive adapter blind-লেখা** (API-আকার সাধারণ জ্ঞান থেকে; OneDrive-এর শুধু createUploadSession ও ৩২০ KiB-নিয়ম Phase ০-এ যাচাইকৃত)। mock-test প্রমাণ করে কোড নিজের সঙ্গে সঙ্গত, **আসল সার্ভারের সঙ্গে নয়**। তাই UI-তে নির্বাচনযোগ্য নয়।
-3. **`mail_imap` আসল সার্ভারে কখনো চলেনি।** UID-fetch, startTls ইত্যাদি `UNVERIFIED-API`। আপনি `isolated` চালিয়ে থাকলে ফল জানাবেন; এখন এটি gate-এর অংশ, তাই ব্যর্থ হলে build আটকাবে।
-4. **Mail অ্যাপ:** আসল account-এ শুধু **ইনবক্সের subject-তালিকা**। বার্তার body ডাউনলোড নেই, ফোল্ডার-তালিকা নেই, flag-sync নেই। স্থানীয় ক্যাশ **শুধু মেমরিতে** (অ্যাপ বন্ধ করলে যায়); account ও password থাকে secure store-এ।
-5. **Drive অ্যাপ:** আসল WebDAV account-এ ব্রাউজ ও মোছা আছে; **ফাইল upload/download UI নেই** (`TransferRunner` লেখা, কিন্তু UI-তে জোড়া নয়); offline-ফাইল ও search নেই।
-6. **OAuth:** provider-তালিকা ও desktop loopback sign-in (টেস্টসহ) আছে; **অ্যাপে "Sign in" বোতাম নেই** (ব্রাউজার খুলতে `url_launcher` লাগবে — Phase ৮); মোবাইল redirect নেই; সব endpoint `endpointsVerified: false`।
-7. **এনক্রিপশন:** DB-র সিদ্ধান্ত অমীমাংসিত; spike লেখা, **ফল আসেনি**। বর্তমানে কোনো মেইল/ফাইল-মেটাডাটা ডিস্কে সংরক্ষিত হয় না।
-8. **Proton, Gmail, Outlook** UI-তে আটকানো (কারণ ব্যাখ্যাসহ)।
-9. **Flutter `material.dart` deprecated** (stable ≥3.47; নতুন নাম `material_ui`) — এখন শুধু info; Phase ৮-এ যাচাই করে migrate।
-10. **Performance:** SQLite-স্তর মাপা (`docs/bench_sqlite_result.json`; in-memory, desktop, SQLCipher ছাড়া)। UI/স্টার্টআপ/RAM/ব্যাটারি **অ-মাপা**।
-11. **Release:** unsigned draft মাত্র; signing, Privacy Policy, স্টোর — বাকি।
-12. Box, pCloud, Google Drive, MEGA adapter নেই; Zoho/Yahoo/Outlook/Gmail আসল সংযোগ নেই।
-13. নিরাপত্তা-নিরীক্ষা, accessibility (screen-reader) নিরীক্ষা, স্টোর-নীতি পর্যালোচনা — হয়নি।
+# KNOWN_LIMITATIONS (Phase ১–৯ পর্যন্ত, খোলাখুলি)
+## আসল CI থেকে প্রমাণিত (আপনার রিপোর্ট অনুযায়ী)
+- Phase ১–৫ কোড compile ও test পাস করেছে; Android+Windows build সফল হয়েছিল।
+- Phase ৬–৭ চালানোর সময় **একমাত্র লাল**: `oauth_signin_test` — কারণ নিশ্চিত: `redirectUri` পড়া হচ্ছিল loopback server বন্ধ হওয়ার **পরে**; ফিক্স (port আগেই সংরক্ষণ) + regression-টেস্ট Phase ৮-এ। ওই রানে `ci_core.sh` প্রথম ব্যর্থতায় থেমেছিল, তাই `drive_core`, `mail_core`, `mail_imap`, Flutter অংশ **তখনো চলেইনি**।
+## Phase ৮–৯-এর কোড: অ-কম্পাইলকৃত ও অপরীক্ষিত
+1. **এই ধাপের সব নতুন Dart কোড** (store, flag-sync, transfer-controller, self-test, OAuth-UI, দুই অ্যাপের পুনর্লিখন) compile/test হয়নি। Python-এ যাচাই হয়েছে শুধু: store-এর **হুবহু SQL** (upsert, FTS-join, cascade), `splitSql`-গণনা, FTS-query-নির্মাণ।
+2. **সবচেয়ে ঝুঁকিপূর্ণ ৩টি জায়গা** (প্রথম রানে লাল হলে সম্ভাব্য কারণ): (ক) অ্যাপ-pubspec-এ `hooks: user_defines: sqlite3: source: sqlite3mc` — build-hook সব platform-এ চলবে কি না অযাচাইকৃত (লাল হলে Android/Windows build-লগ পাঠান); (খ) `mail_imap`-এর `UNVERIFIED-API` লাইনগুলো (UID-fetch/flags/body/xoauth2); (গ) Flutter-plugin (`file_selector`, `path_provider`, `url_launcher`, `flutter_secure_storage`)-এর Android/Windows build।
+3. `aethryon_store` টেস্ট ধরে নেয় ডিফল্ট sqlite3 build **cipher-মুক্ত** (তাই "plaintext প্রত্যাখ্যান" টেস্ট পাস করে)।
+## বৈশিষ্ট্য যা নেই / আংশিক
+4. **Mail:** শুধু INBOX; ফোল্ডার-তালিকা নেই; পড়া/মোছা/archive/flag-পরিবর্তন UI নেই (flag-sync সার্ভার→অ্যাপ দিকে আছে); **attachment নেই**; মেইল-search UI নেই (store-এ আছে); outbox স্থায়ী নয়; HTML = শুধু plain text।
+5. **Drive:** উপরের ছাড়া offline-**ফাইল** (শুধু নাম-তালিকা cache); সার্ভার-সাইড search নেই; Wi-Fi-only/metered নীতি নেই (connectivity plugin লাগবে); folder-sync/mirror নেই; WebDAV-এ resumable নেই।
+6. **Provider:** Dropbox/OneDrive = blind adapter (experimental, self-test আছে); **Google Drive, Box, pCloud, MEGA adapter নেই** (প্রতিটির আসল docs পড়তে হবে; blind লেখা এড়ানো হয়েছে)।
+7. **Background sync নেই** (ইচ্ছাকৃত, ADR-045); মেইল push নেই।
+8. **OAuth:** সব endpoint `endpointsVerified: false`; Google/Microsoft মোবাইলে loopback-redirect UNVERIFIED; ব্যবহারকারীকে নিজের client ID বানাতে হয়।
+9. `material.dart` deprecated (info) — `material_ui` migration করা হয়নি (API অযাচাইকৃত)।
+10. **Performance:** ডিভাইসে P-01…P-14 **অ-মাপা** (আমি ডিভাইস পাই না) — Diagnostics-স্ক্রিন + প্রোটোকল দেওয়া হয়েছে, মাপবেন আপনি। SQLite-স্তর মাপা (desktop, in-memory)।
+11. **Release:** Windows সাইন নেই; Linux শুধু tar.gz; Play-এর জন্য AAB নেই; আইকন নেই; Privacy Policy খসড়া (আইনি পর্যালোচনা ও ইমেইল বাকি)।
+12. নিরাপত্তা-নিরীক্ষা ও accessibility: কেবল self-review + স্বয়ংক্রিয় tap-target পরীক্ষা (`SECURITY_REVIEW_PHASE9.md`)।
+13. Apple (iOS/macOS) সম্পূর্ণ বাদ।

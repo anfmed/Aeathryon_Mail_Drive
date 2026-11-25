@@ -1,15 +1,21 @@
 import 'package:aethryon_auth/aethryon_auth.dart';
 import 'package:drive_app/main.dart';
+import 'package:drive_app/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Widget app([MemorySecureStore? s]) =>
-    DriveApp(secureStore: s ?? MemorySecureStore());
+import 'helpers.dart';
+
+Widget app({MemorySecureStore? store, Future<DriveDb> Function()? openDb}) =>
+    DriveApp(services: testServices(store: store, openDb: openDb));
+
+Future<void> openAccounts(WidgetTester t) async {
+  await t.tap(find.text('Accounts'));
+  await t.pumpAndSettle();
+}
 
 void main() {
-  testWidgets('lists folders first, opens a folder, offers up-navigation', (
-    t,
-  ) async {
+  testWidgets('lists folders first, opens a folder, offers up-navigation', (t) async {
     await t.pumpWidget(app());
     await t.pumpAndSettle();
     expect(find.text('Documents'), findsOneWidget);
@@ -34,64 +40,99 @@ void main() {
     expect(find.text('readme.md'), findsOneWidget);
   });
 
-  testWidgets('providers screen never shows unverified as supported', (
-    t,
-  ) async {
+  testWidgets('settings: provider status never shows unverified as supported; storage problem is explained', (t) async {
     await t.pumpWidget(app());
-    await t.tap(find.text('Providers'));
+    await t.tap(find.text('Settings'));
     await t.pumpAndSettle();
     expect(find.text('unverified'), findsWidgets);
     expect(find.text('full'), findsNothing);
+    expect(find.textContaining('disabled in tests'), findsOneWidget);
+    expect(find.text('Diagnostics'), findsOneWidget);
   });
 
-  testWidgets('add-account form rejects empty input and insecure http', (
-    t,
-  ) async {
+  testWidgets('transfers and search show honest empty/unavailable states', (t) async {
     await t.pumpWidget(app());
-    await t.tap(find.text('Accounts'));
+    await t.tap(find.text('Transfers'));
     await t.pumpAndSettle();
+    expect(find.text('No transfers yet.'), findsOneWidget);
+    await t.tap(find.text('Search'));
+    await t.pumpAndSettle();
+    expect(find.textContaining('encrypted local database'), findsOneWidget);
+  });
+
+  testWidgets('experimental providers are hidden until switched on', (t) async {
+    await t.pumpWidget(app());
+    await openAccounts(t);
     await t.tap(find.text('Add account'));
+    await t.pumpAndSettle();
+    expect(find.text('WebDAV / Nextcloud'), findsOneWidget);
+    expect(find.text('Dropbox (experimental)'), findsNothing);
+    await t.pageBack();
+    await t.pumpAndSettle();
+    await t.tap(find.text('Settings'));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('experimental')));
+    await t.pumpAndSettle();
+    await openAccounts(t);
+    await t.tap(find.text('Add account'));
+    await t.pumpAndSettle();
+    expect(find.text('Dropbox (experimental)'), findsOneWidget);
+    expect(find.text('OneDrive (experimental)'), findsOneWidget);
+    await t.tap(find.text('Dropbox (experimental)'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Sign in with browser'));
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('error')), findsOneWidget);
+  });
+
+  testWidgets('add-account form rejects empty input and insecure http', (t) async {
+    await t.pumpWidget(app());
+    await openAccounts(t);
+    await t.tap(find.text('Add account'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('WebDAV / Nextcloud'));
     await t.pumpAndSettle();
     await t.tap(find.text('Save'));
     await t.pumpAndSettle();
     expect(find.byKey(const Key('error')), findsOneWidget);
     await t.enterText(find.byKey(const Key('label')), 'X');
-    await t.enterText(
-      find.byKey(const Key('url')),
-      'http://cloud.example/dav/',
-    );
+    await t.enterText(find.byKey(const Key('url')), 'http://cloud.example/dav/');
     await t.tap(find.text('Save'));
     await t.pumpAndSettle();
     expect(find.textContaining('https'), findsWidgets);
   });
 
-  testWidgets(
-    'saved account is listed; the password lives only in the secure store',
-    (t) async {
-      final store = MemorySecureStore();
-      await t.pumpWidget(app(store));
-      await t.tap(find.text('Accounts'));
-      await t.pumpAndSettle();
-      await t.tap(find.text('Add account'));
-      await t.pumpAndSettle();
-      await t.enterText(find.byKey(const Key('label')), 'Home NAS');
-      await t.enterText(
-        find.byKey(const Key('url')),
-        'https://nas.example/remote.php/dav/files/me/',
-      );
-      await t.enterText(find.byKey(const Key('user')), 'me');
-      await t.enterText(find.byKey(const Key('password')), 's3cret');
-      await t.ensureVisible(find.text('Save'));
-      await t.tap(find.text('Save'));
-      await t.pumpAndSettle();
-      expect(find.text('Home NAS'), findsOneWidget);
-      expect(find.textContaining('s3cret'), findsNothing);
-      final vault = AccountVault(store, 'aethryon.drive');
-      final recs = await vault.list();
-      expect(recs.single.settings.containsKey('password'), isFalse);
-      expect(await vault.secret(recs.single.id), 's3cret');
-      // the Mail namespace cannot see Drive's account
-      expect(await AccountVault(store, 'aethryon.mail').list(), isEmpty);
-    },
-  );
+  testWidgets('saved account is listed; the password lives only in the secure store', (t) async {
+    final store = MemorySecureStore();
+    await t.pumpWidget(app(store: store));
+    await openAccounts(t);
+    await t.tap(find.text('Add account'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('WebDAV / Nextcloud'));
+    await t.pumpAndSettle();
+    await t.enterText(find.byKey(const Key('label')), 'Home NAS');
+    await t.enterText(find.byKey(const Key('url')), 'https://nas.example/remote.php/dav/files/me/');
+    await t.enterText(find.byKey(const Key('user')), 'me');
+    await t.enterText(find.byKey(const Key('password')), 's3cret');
+    await t.ensureVisible(find.text('Save'));
+    await t.tap(find.text('Save'));
+    await t.pumpAndSettle();
+    expect(find.text('Home NAS'), findsOneWidget);
+    expect(find.textContaining('s3cret'), findsNothing);
+    final vault = AccountVault(store, 'aethryon.drive');
+    final recs = await vault.list();
+    expect(recs.single.settings.containsKey('password'), isFalse);
+    expect(await vault.secret(recs.single.id), 's3cret');
+    expect(await AccountVault(store, 'aethryon.mail').list(), isEmpty);
+    expect(find.byTooltip('Run self-test for Home NAS'), findsOneWidget);
+  });
+
+  testWidgets('accessibility: tap targets and labels (Files screen)', (t) async {
+    final handle = t.ensureSemantics();
+    await t.pumpWidget(app());
+    await t.pumpAndSettle();
+    await expectLater(t, meetsGuideline(androidTapTargetGuideline));
+    await expectLater(t, meetsGuideline(labeledTapTargetGuideline));
+    handle.dispose();
+  });
 }

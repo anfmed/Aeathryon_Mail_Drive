@@ -12,3 +12,6 @@ export 'src/http_util.dart';
 export 'src/resumable.dart';
 export 'src/dropbox_adapter.dart';
 export 'src/onedrive_adapter.dart';
+export 'src/file_io.dart';
+export 'src/self_test.dart';
+export 'src/transfer_controller.dart';

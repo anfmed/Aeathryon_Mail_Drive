@@ -62,3 +62,19 @@ Local-only অ্যাপের CASA-ছাড় আছে কি না (S26 
 | 039 | যে provider-এ trash নেই সেখানে মোছা = "চিরতরে মোছা" লিখিত স্পষ্ট নিশ্চিতকরণ, Undo নেই | G6 recoverability | — |
 | 040 | **Retry-নিরাপত্তা:** body প্রতি attempt-এ নতুন করে বানানো; upload-stream স্বয়ংক্রিয় retry হয় না; ত্রুটি-বার্তায় response-body/token থাকে না; **bearer token কখনো pre-authenticated URL-এ পাঠানো হয় না** (OneDrive download/upload) | G6 | প্রথম live-CI-র শিক্ষা |
 | 041 | Proton Bridge সংযোগ এখনো বাস্তবায়িত নয় (STARTTLS-পথ অযাচাইকৃত) → UI-তে আটকানো | G7 | — |
+
+---
+# Phase ৮–৯ সিদ্ধান্ত (লক্ষ্য-ভিত্তিক; Apple/macOS বাদ)
+| ADR | সিদ্ধান্ত | লক্ষ্য | টীকা |
+|---|---|---|---|
+| 042 | **এনক্রিপ্টেড DB = `sqlite3mc`** (OpenSSL-মুক্ত, ছোট)। একটি শব্দ (`source:`) বদলে `sqlcipher` করা যায় — **CI `db-spike`-এর ফল** অনুযায়ী নিশ্চিত/বদল। (ADR-035-এর নিষ্পত্তি) | G1 + G6 | হুক-সেটিং দুই অ্যাপের pubspec-এ (root) |
+| 043 | **নীরব plaintext নিষিদ্ধ:** cipher সক্রিয় না থাকলে ডিস্কে কিছু লেখা হয় না; অ্যাপ মেমরি-মোডে চলে ও Settings-এ কারণ দেখায় | G6 + G7 | plain SQLite `PRAGMA key` চুপচাপ উপেক্ষা করে — তাই স্পষ্ট পরীক্ষা |
+| 044 | DB-তে **শুধু পুনর্নির্মাণযোগ্য cache** (Drive: নাম/আকার; Mail: header)। body/attachment/password কখনো নয়; key হারালে cache নতুন | G6 | — |
+| 045 | **ব্যাকগ্রাউন্ড service নেই (v1):** শুধু অ্যাপ-খোলা অবস্থায় polling (`PollScheduler`, ব্যর্থতায় backoff, অ্যাপ-ব্যাকগ্রাউন্ডে বন্ধ)। Android WorkManager/Windows ট্রে — plugin-খরচ/ব্যাটারি মেপে পরে | G1 (ব্যাটারি, হালকা) | মেইল push নেই (ADR-007) |
+| 046 | Dropbox/OneDrive = **opt-in "experimental"** টগল + অ্যাকাউন্ট-পর্যায়ের **self-test** (নিজেই পরিষ্কার করে; secret/নাম রিপোর্টে নেই) | G7 | live-যাচাই = আপনার account-এ |
+| 047 | সব OAuth-এ **নিজস্ব client ID** (BYO); Aethryon কোনো client ID/secret পাঠায় না | G3 + G2 | ADR-009 |
+| 048 | **Release:** Android = আপনার keystore-এ `apksigner` (secrets থাকলে), নইলে debug-সই preview; Windows = unsigned zip + SmartScreen নোট; Linux = tar.gz; package-id `com.aethryon.*` | G3 | `RELEASE_GUIDE.md` |
+| 049 | অ্যাপের নাম "Aethryon Drive/Mail"; Android backup বন্ধ; build-number = CI run-number | G6 | CI-patch best-effort |
+| 050 | ডাউনলোড: desktop = `Downloads/Aethryon`; ফোন = অ্যাপ-documents/`Aethryon` (SAF save-dialog নয় — অতিরিক্ত plugin এড়াতে); নাম sanitize; কখনো overwrite নয় | G1 + G6 | ফোনে ফাইল-ম্যানেজার দিয়ে দেখতে হবে |
+| 051 | Upload: ≤৪ MiB বা non-resumable provider ⇒ একক stream-request; বড় + resumable provider ⇒ session | G1 (RAM) | WebDAV-এ resume নেই |
+| 052 | **কোনো telemetry/analytics/crash-report নেই**; Diagnostics শুধু স্থানীয়, ব্যবহারকারী নিজে কপি করে | G2 + G6 | Privacy Policy খসড়া |

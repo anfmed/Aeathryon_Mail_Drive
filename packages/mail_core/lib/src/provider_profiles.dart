@@ -1,7 +1,6 @@
 import 'package:aethryon_capability/aethryon_capability.dart';
 
 enum AuthMethod { oauth2, appPassword, password, bridgeCredential }
-
 enum Security { ssl, startTls }
 
 class ServerSpec {
@@ -17,7 +16,6 @@ class ProviderProfile {
   final ServerSpec? imap;
   final ServerSpec? smtp;
   final List<AuthMethod> auth;
-
   /// true only when host/port were confirmed from a primary source in Phase 0/1.
   final bool hostsVerified;
   final List<String> sources;
@@ -64,10 +62,7 @@ const profiles = <ProviderProfile>[
     auth: [AuthMethod.appPassword, AuthMethod.oauth2],
     hostsVerified: false, // S19 is secondary
     sources: ['S19'],
-    overall: Capability.requiresPermission(
-      sources: ['S19'],
-      note: 'OAuth needs Yahoo approval (secondary source)',
-    ),
+    overall: Capability.requiresPermission(sources: ['S19'], note: 'OAuth needs Yahoo approval (secondary source)'),
   ),
   ProviderProfile(
     id: 'gmail',
@@ -75,13 +70,9 @@ const profiles = <ProviderProfile>[
     imap: ServerSpec('imap.gmail.com', 993, Security.ssl),
     smtp: ServerSpec('smtp.gmail.com', 465, Security.ssl),
     auth: [AuthMethod.oauth2],
-    hostsVerified:
-        false, // hosts not re-verified this phase; OAuth scope per S04
+    hostsVerified: false, // hosts not re-verified this phase; OAuth scope per S04
     sources: ['S04'],
-    overall: Capability.requiresPermission(
-      sources: ['S01', 'S04'],
-      note: 'restricted scope; BYO client path (ADR-009)',
-    ),
+    overall: Capability.requiresPermission(sources: ['S01', 'S04'], note: 'restricted scope; BYO client path (ADR-009)'),
   ),
   ProviderProfile(
     id: 'outlook',
@@ -101,10 +92,7 @@ const profiles = <ProviderProfile>[
     auth: [AuthMethod.bridgeCredential],
     hostsVerified: false,
     sources: ['S17'],
-    overall: Capability.requiresCompanion(
-      sources: ['S17'],
-      note: 'desktop only; paid Proton plan',
-    ),
+    overall: Capability.requiresCompanion(sources: ['S17'], note: 'desktop only; paid Proton plan'),
     mobileSupported: false,
     userNote: 'Needs the official Proton Mail Bridge running on this computer.',
   ),
@@ -113,10 +101,7 @@ const profiles = <ProviderProfile>[
     displayName: 'Other (IMAP/SMTP)',
     auth: [AuthMethod.password, AuthMethod.appPassword, AuthMethod.oauth2],
     hostsVerified: false,
-    overall: Capability.partial(
-      evidence: Evidence.none,
-      note: 'capabilities discovered at runtime',
-    ),
+    overall: Capability.partial(evidence: Evidence.none, note: 'capabilities discovered at runtime'),
   ),
 ];
 
@@ -129,15 +114,14 @@ ProviderProfile? profileById(String id) {
 
 /// Why this profile cannot be connected RIGHT NOW (null = it can). Honest by design:
 /// an unsupported path is explained, never offered.
-String? connectBlockedReason(ProviderProfile p, {required bool isMobile}) {
+String? connectBlockedReason(ProviderProfile p, {required bool isMobile, bool oauthAvailable = false}) {
   if (!p.mobileSupported && isMobile) {
     return 'This provider needs a desktop companion app and cannot be used on a phone.';
   }
   if (p.auth.contains(AuthMethod.bridgeCredential)) {
     return 'Connecting through Proton Mail Bridge is not implemented yet.';
   }
-  if (!(p.auth.contains(AuthMethod.appPassword) ||
-      p.auth.contains(AuthMethod.password))) {
+  if (!(p.auth.contains(AuthMethod.appPassword) || p.auth.contains(AuthMethod.password)) && !oauthAvailable) {
     return 'Signing in to ${p.displayName} needs OAuth, which is not connected to the app yet.';
   }
   return null;

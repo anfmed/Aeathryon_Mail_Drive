@@ -1,0 +1,12 @@
+name: aethryon_host_flutter
+description: "OS bindings: file picker, app directories, system browser (thin wrappers over official Flutter plugins)"
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+dependencies:
+  flutter: {sdk: flutter}
+  aethryon_platform: {path: ../aethryon_platform}
+  file_selector: any      # flutter.dev plugin; licence/size via dependency gate
+  path_provider: any      # flutter.dev plugin
+  url_launcher: any       # flutter.dev plugin

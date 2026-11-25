@@ -10,3 +10,8 @@ CI-তে বানানো unsigned build দিয়ে। প্রতি�
 - সঙ্গে নোট করুন: অন্য কোন অ্যাপ খোলা ছিল।
 ## লক্ষ্য (PROPOSED, PERFORMANCE_REQUIREMENTS.md)
 P-01 ≤ ২.০ s (low-end Android ≤ ৩.০ s) · P-02 ≤ ১৫০/২০০ MB · P-03 ≤ ১২০ MB। বাজেটের চেয়ে বেশি হলে ADR-003 পুনর্বিবেচনা।
+
+## সহজ পথ (Phase ৮ থেকে): অ্যাপের ভেতরের Diagnostics
+দুই অ্যাপেই **Settings → Diagnostics**: "First frame (from main)" ও "Memory (RSS) now/peak"। **Refresh** চেপে ৫ মিনিট idle রেখে আবার দেখুন; **Copy** চেপে লেখাটি চ্যাটে পেস্ট করুন।
+- সীমা: first-frame মাপা শুরু হয় `main()` থেকে (ইঞ্জিন-চালুর সময় বাদ) — তাই সত্যিকারের cold-start এর জন্য উপরের `adb ... TotalTime`/স্টপওয়াচ পদ্ধতিও লাগে।
+- RSS Android-এ প্রক্রিয়ার মোট resident মেমরি; `dumpsys meminfo`-এর PSS-এর সঙ্গে হুবহু মিলবে না।

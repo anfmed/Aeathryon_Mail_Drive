@@ -1,5 +1,4 @@
 import 'package:http/http.dart' as http;
-
 import '../aethryon_auth.dart' show Pkce, TokenSet, randomState;
 import 'loopback.dart';
 import 'oauth.dart';
@@ -38,8 +37,7 @@ Future<TokenSet> oauthSignIn({
     rethrow;
   }
   final params = await receiver.waitForCallback(timeout: timeout);
-  if (params['error'] != null)
-    throw OAuthError(params['error']!, params['error_description']);
+  if (params['error'] != null) throw OAuthError(params['error']!, params['error_description']);
   if (!verifyState(state, params['state'])) throw OAuthError('state_mismatch');
   final code = params['code'];
   if (code == null || code.isEmpty) throw OAuthError('missing_code');

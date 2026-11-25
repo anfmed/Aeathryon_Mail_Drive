@@ -1,0 +1,14 @@
+name: aethryon_store
+description: "Encrypted SQLite storage for Drive/Mail caches. Hard rule: never silently store plaintext."
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: '>=3.10.0 <4.0.0'
+dependencies:
+  aethryon_platform: {path: ../aethryon_platform}
+  drive_core: {path: ../drive_core}
+  mail_core: {path: ../mail_core}
+  sqlite3: any   # build-hook source (sqlite3mc/sqlcipher) is set in the APP pubspec (root package only)
+dev_dependencies:
+  aethryon_auth: {path: ../aethryon_auth}
+  test: any

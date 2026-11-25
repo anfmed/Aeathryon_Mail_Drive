@@ -30,4 +30,6 @@ for name, c in (("drive", d), ("mail", m)):
     bad = {"token", "password", "secret", "refresh_token", "access_token"} & set(cols)
     if bad:
         sys.exit(f"FAIL: secret-like column in {name}: {bad}")
+import subprocess
+subprocess.run([sys.executable, "tools/gen_schema_dart.py", "--check"], check=True)
 print("schemas OK")

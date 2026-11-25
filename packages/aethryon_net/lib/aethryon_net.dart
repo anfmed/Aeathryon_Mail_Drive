@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 enum FailureKind { transient, throttled, auth, permanent }
@@ -32,13 +33,8 @@ class RetryPolicy {
   });
 
   /// attempt is 1-based (delay applied after attempt N failed). Equal jitter.
-  Duration delayFor(
-    int attempt, {
-    required math.Random random,
-    Duration? retryAfter,
-  }) {
-    if (retryAfter != null)
-      return retryAfter > maxDelay ? maxDelay : retryAfter;
+  Duration delayFor(int attempt, {required math.Random random, Duration? retryAfter}) {
+    if (retryAfter != null) return retryAfter > maxDelay ? maxDelay : retryAfter;
     final shift = math.min(math.max(attempt - 1, 0), 20);
     final exp = baseDelay.inMilliseconds * (1 << shift);
     final capped = math.min(exp, maxDelay.inMilliseconds);
@@ -65,20 +61,15 @@ Future<T> retry<T>({
 }) async {
   final rnd = random ?? math.Random();
   final doSleep = sleep ?? (Duration d) => Future<void>.delayed(d);
-  for (var attempt = 1; ; attempt++) {
+  for (var attempt = 1;; attempt++) {
     try {
       return await op();
     } catch (e) {
       final kind = classify(e);
       if (kind == FailureKind.permanent || kind == FailureKind.auth) rethrow;
       if (attempt >= policy.maxAttempts) throw RetryExhausted(e, attempt);
-      await doSleep(
-        policy.delayFor(
-          attempt,
-          random: rnd,
-          retryAfter: retryAfterOf?.call(e),
-        ),
-      );
+      await doSleep(policy.delayFor(attempt,
+          random: rnd, retryAfter: retryAfterOf?.call(e)));
     }
   }
 }
@@ -96,9 +87,9 @@ class TokenBucket {
     required this.capacity,
     required this.refillPerSecond,
     DateTime Function()? now,
-  }) : _now = now ?? DateTime.now,
-       _tokens = capacity,
-       _last = (now ?? DateTime.now)();
+  })  : _now = now ?? DateTime.now,
+        _tokens = capacity,
+        _last = (now ?? DateTime.now)();
 
   Duration acquire([double cost = 1]) {
     final t = _now();
@@ -109,4 +100,70 @@ class TokenBucket {
     if (_tokens >= 0) return Duration.zero;
     return Duration(microseconds: ((-_tokens / refillPerSecond) * 1e6).ceil());
   }
+}
+
+typedef TimerFactory = Timer Function(Duration d, void Function() cb);
+
+/// Foreground polling (no background service: lightweight by design). Doubles the
+/// delay after each failure (max [maxBackoff]) and resets after a success.
+class PollScheduler {
+  final Duration interval;
+  final Duration maxBackoff;
+  final Future<void> Function() task;
+  final TimerFactory _timer;
+  Timer? _t;
+  int _failures = 0;
+  bool _running = false;
+  bool _inFlight = false;
+
+  PollScheduler({
+    required this.interval,
+    required this.task,
+    this.maxBackoff = const Duration(hours: 1),
+    TimerFactory? timerFactory,
+  }) : _timer = timerFactory ?? ((d, cb) => Timer(d, cb));
+
+  bool get running => _running;
+  int get failures => _failures;
+
+  Duration get nextDelay {
+    final shift = math.min(_failures, 10);
+    final d = interval * (1 << shift);
+    return d > maxBackoff ? maxBackoff : d;
+  }
+
+  void start() {
+    if (_running) return;
+    _running = true;
+    _schedule();
+  }
+
+  void stop() {
+    _running = false;
+    _t?.cancel();
+    _t = null;
+  }
+
+  void _schedule() {
+    _t?.cancel();
+    if (!_running) return;
+    _t = _timer(nextDelay, _tick);
+  }
+
+  Future<void> _tick() async {
+    if (!_running || _inFlight) return;
+    _inFlight = true;
+    try {
+      await task();
+      _failures = 0;
+    } catch (_) {
+      _failures++;
+    } finally {
+      _inFlight = false;
+      _schedule();
+    }
+  }
+
+  /// Run now (e.g. user pulled to refresh) without waiting for the timer.
+  Future<void> triggerNow() => _tick();
 }

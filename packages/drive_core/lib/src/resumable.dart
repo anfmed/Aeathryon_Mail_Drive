@@ -6,22 +6,13 @@ import 'transfer.dart';
 abstract class ResumableSession {
   String get ref; // provider session reference (persist for resume - Phase 8)
   Future<int> confirmedOffset();
-  Future<void> putChunk(
-    ChunkRange range,
-    List<int> bytes, {
-    required int total,
-  });
+  Future<void> putChunk(ChunkRange range, List<int> bytes, {required int total});
   Future<RemoteNode> finish();
 }
 
 abstract class ResumableUploader {
   ChunkConstraint get constraint;
-  Future<ResumableSession> begin(
-    String accountId,
-    String parentId,
-    String name,
-    int totalBytes,
-  );
+  Future<ResumableSession> begin(String accountId, String parentId, String name, int totalBytes);
 }
 
 abstract class LocalSink {
@@ -52,8 +43,7 @@ class MemorySource implements LocalSource {
   @override
   Future<int> length() async => data.length;
   @override
-  Future<List<int>> read(int start, int endInclusive) async =>
-      data.sublist(start, endInclusive + 1);
+  Future<List<int>> read(int start, int endInclusive) async => data.sublist(start, endInclusive + 1);
 }
 
 class TransferCancelled implements Exception {
@@ -82,17 +72,13 @@ class TransferRunner {
       await sink.truncate();
     }
     var written = offset;
-    await for (final chunk in adapter.download(
-      job.accountId,
-      job.remoteId,
-      start: offset > 0 ? offset : null,
-    )) {
+    await for (final chunk in adapter.download(job.accountId, job.remoteId, start: offset > 0 ? offset : null)) {
       if (isCancelled?.call() == true) throw TransferCancelled();
       await sink.append(chunk);
       written += chunk.length;
       onProgress?.call(written, job.totalBytes);
     }
-    if (written != job.totalBytes) {
+    if (job.totalBytes >= 0 && written != job.totalBytes) {
       throw StateError('download size mismatch: $written of ${job.totalBytes}');
     }
     return written;
@@ -112,11 +98,7 @@ class TransferRunner {
     final session = await uploader.begin(accountId, parentId, name, total);
     final start = await session.confirmedOffset();
     final plan = planChunks(
-      totalBytes: total,
-      preferred: preferredChunk,
-      constraint: uploader.constraint,
-      startOffset: start,
-    );
+        totalBytes: total, preferred: preferredChunk, constraint: uploader.constraint, startOffset: start);
     for (final r in plan) {
       if (isCancelled?.call() == true) throw TransferCancelled();
       final bytes = await source.read(r.start, r.endInclusive);

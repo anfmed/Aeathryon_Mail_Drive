@@ -29,19 +29,16 @@ jobs:
       - name: Install Flutter (official repo)
         shell: bash
         run: bash tools/install_flutter.sh
-      - name: Pure-Dart packages - analyze + test
+      - name: Pure-Dart packages - analyze + test (all failures listed)
         shell: bash
         run: bash tools/ci_core.sh
       - name: SQL schema validation
+        if: always()
         run: python3 tools/validate_schema.py
-      - name: Flutter package + apps - analyze + test
+      - name: Flutter packages + apps - analyze + test (all failures listed)
+        if: always()
         shell: bash
-        run: |
-          set -e
-          for d in packages/aethryon_design packages/aethryon_secure_store_flutter apps/drive_app apps/mail_app; do
-            echo "=== $d ==="
-            (cd "$d" && flutter pub get && flutter analyze --no-fatal-infos && { [ ! -d test ] || flutter test; })
-          done
+        run: bash tools/ci_flutter.sh
 
   plan:
     needs: check
@@ -62,7 +59,8 @@ jobs:
           ]
           if os.environ.get("INCLUDE_LINUX") == "true":
             targets.append({"target": "linux", "os": "ubuntu-latest", "platform": "linux", "cmd": "flutter build linux --release"})
-          include = [dict(t, app=a) for a in ("drive_app", "mail_app") for t in targets]
+          titles = {"drive_app": "Aethryon Drive", "mail_app": "Aethryon Mail"}
+          include = [dict(t, app=a, title=titles[a]) for a in ("drive_app", "mail_app") for t in targets]
           print("matrix=" + json.dumps({"include": include}))
           PY
 
@@ -95,15 +93,50 @@ jobs:
         run: |
           set -euo pipefail
           tmp="$(mktemp -d)"
-          flutter create --platforms=${{ matrix.platform }} --project-name ${{ matrix.app }} "$tmp/gen"
+          flutter create --org com.aethryon --platforms=${{ matrix.platform }} --project-name ${{ matrix.app }} "$tmp/gen"
           cp -R "$tmp/gen/${{ matrix.platform }}" "apps/${{ matrix.app }}/"
+      - name: Branding + hardening (best effort; failures only warn)
+        shell: bash
+        working-directory: apps/${{ matrix.app }}
+        run: |
+          case "${{ matrix.target }}" in
+            android)
+              M=android/app/src/main/AndroidManifest.xml
+              sed -i 's/android:label="[^"]*"/android:label="${{ matrix.title }}"/' "$M" || echo "::warning::could not set app label"
+              # no cloud/adb backup of app data: the secure-store wrapper keys must not be restored on another device
+              grep -q 'android:allowBackup' "$M" || sed -i 's/<application/<application android:allowBackup="false"/' "$M" || echo "::warning::could not disable backup"
+              grep -n 'android:label\|allowBackup' "$M" || true ;;
+            windows)
+              sed -i 's/L"${{ matrix.app }}"/L"${{ matrix.title }}"/' windows/runner/main.cpp || echo "::warning::could not set window title"
+              grep -n 'Aethryon' windows/runner/main.cpp || true ;;
+          esac
       - name: Build
         shell: bash
         working-directory: apps/${{ matrix.app }}
         run: |
           flutter pub get
-          ${{ matrix.cmd }}
-      - name: Package (unsigned)
+          ${{ matrix.cmd }} --build-number=${{ github.run_number }}
+      - name: Sign APKs (only when keystore secrets exist)
+        if: matrix.target == 'android'
+        shell: bash
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KS_B64" ]; then
+            echo "No keystore secrets set: APKs stay debug-signed (preview only). See docs/RELEASE_GUIDE.md"
+            exit 0
+          fi
+          echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)"
+          for f in apps/${{ matrix.app }}/build/app/outputs/flutter-apk/*-release.apk; do
+            "$APKSIGNER" sign --ks "$RUNNER_TEMP/release.jks" --ks-key-alias "$KEY_ALIAS" --ks-pass env:KS_PASS --key-pass env:KEY_PASS "$f"
+            "$APKSIGNER" verify --print-certs "$f" | head -3
+          done
+          rm -f "$RUNNER_TEMP/release.jks"
+      - name: Package
         shell: bash
         run: |
           set -euo pipefail

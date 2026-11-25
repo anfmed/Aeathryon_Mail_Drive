@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-# analyze + test every pure-Dart package. Fails on the first error.
-set -euo pipefail
-for p in aethryon_capability aethryon_net aethryon_log aethryon_platform aethryon_auth drive_core mail_core mail_imap; do
+# analyze + test every pure-Dart package; keeps going after a failure and lists ALL failures at the end.
+set -uo pipefail
+failed=()
+for p in aethryon_capability aethryon_net aethryon_log aethryon_platform aethryon_auth drive_core mail_core mail_imap aethryon_store; do
   echo "=== $p ==="
-  pushd "packages/$p" >/dev/null
-  dart pub get
-  dart analyze
-  if [ -d test ]; then dart test; fi
-  popd >/dev/null
+  ( cd "packages/$p" && dart pub get && dart analyze && { [ ! -d test ] || dart test; } ) || failed+=("$p")
 done
+if [ ${#failed[@]} -gt 0 ]; then
+  echo "::error::FAILED PACKAGES: ${failed[*]}"
+  exit 1
+fi
+echo "all pure-Dart packages passed"

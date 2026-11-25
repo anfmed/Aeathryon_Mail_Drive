@@ -1,19 +1,28 @@
 name: mail_app
-description: "Aethryon Mail app (Phase 6: demo data + real IMAP/SMTP accounts with app passwords)"
+description: "Aethryon Mail app (Phase 8: encrypted header cache, message bodies, OAuth sign-in, flag-sync, auto-refresh)"
 publish_to: none
-version: 0.3.0+1
+version: 0.5.0+1
 environment:
-  sdk: '>=3.3.0 <4.0.0'
+  sdk: '>=3.10.0 <4.0.0'
 dependencies:
   flutter: {sdk: flutter}
+  http: any
   aethryon_auth: {path: ../../packages/aethryon_auth}
   aethryon_capability: {path: ../../packages/aethryon_capability}
   aethryon_design: {path: ../../packages/aethryon_design}
+  aethryon_host_flutter: {path: ../../packages/aethryon_host_flutter}
+  aethryon_net: {path: ../../packages/aethryon_net}
   aethryon_platform: {path: ../../packages/aethryon_platform}
   aethryon_secure_store_flutter: {path: ../../packages/aethryon_secure_store_flutter}
+  aethryon_store: {path: ../../packages/aethryon_store}
   mail_core: {path: ../../packages/mail_core}
   mail_imap: {path: ../../packages/mail_imap}
 dev_dependencies:
   flutter_test: {sdk: flutter}
 flutter:
   uses-material-design: true
+# ADR-035: encrypted local database. The build-hook option is read from the ROOT package only.
+hooks:
+  user_defines:
+    sqlite3:
+      source: sqlite3mc

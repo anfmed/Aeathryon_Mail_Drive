@@ -21,6 +21,15 @@
   - Mail অ্যাপ → Accounts → Add → iCloud (app-specific password) বা অন্য IMAP → ইনবক্সের subject-তালিকা আসে কি? (এটাই `mail_imap`-এর প্রথম আসল পরীক্ষা)
   - ফল জানান: কাজ করেছে / কোন ত্রুটি-বার্তা এসেছে (বার্তা অক্ষরে অক্ষরে)। password/ঠিকানা পাঠাবেন না।
 
+## A++. Phase ৮–৯ (v5): ধাপে ধাপে
+1. ☐ ZIP-এর ফাইল দিয়ে overwrite → push → `format` শেষে `git pull`।
+2. ☐ `ci` চালান — **"অতিরিক্ত পরীক্ষা"-ও টিক দিন**। এখন চেক-ধাপ **সব ব্যর্থতা একসাথে** দেখায় (`FAILED PACKAGES: …` / `FAILED: …` লাইন)। লাল হলে: ওই লাইনটি + প্রতিটি ব্যর্থ package-এর ত্রুটির লাইন পাঠান। ⚠ সবচেয়ে সম্ভাব্য লাল: Android/Windows **Build** ধাপে `sqlite3` hook বা plugin — সেই ধাপের লগের শেষ ৫০ লাইন পাঠান।
+3. ☐ `db-spike` Summary (৪টি job) পাঠান — এনক্রিপশন সত্যিই কাজ করছে কি, লাইব্রেরির আকার কত।
+4. ☐ build সবুজ হলে APK ফোনে ও Windows zip PC-তে চালান: **Settings → Diagnostics → Copy** করে পেস্ট করুন (P-01..03)।
+5. ☐ আসল account-এ (অ্যাপের ভেতরে বসান): Drive → WebDAV/Nextcloud ➜ **Accounts → 🧪 "Run self-test"** → ফলাফল **Copy** করে পাঠান; ডাউনলোড/আপলোড করে দেখুন। Dropbox/OneDrive চাইলে Settings-এ "experimental" চালু করে নিজের client ID দিয়ে sign-in + self-test। Mail → iCloud/IMAP → ইনবক্স, বার্তা খোলা, পাঠানো।
+6. ☐ (Release চাইলে) `docs/RELEASE_GUIDE.md` §১: keystore + ৪টি secret। না চাইলে বাদ।
+7. ☐ আপনার সিদ্ধান্ত: লাইসেন্স (ADR-021) · Privacy Policy-র ইমেইল (`[CONTACT-EMAIL]`) · লোগো/আইকন · Play-ফি নেবেন কি না।
+
 ## B. দ্রুত ফোন/PC পরিমাপ (প্রায় ৩০ মিনিট, বিনামূল্যে)
 9. ☐ `docs/MEASUREMENT_PROTOCOL.md` অনুযায়ী আপনার সবচেয়ে দুর্বল Android ফোন ও ৪ GB Windows PC-তে: ঠান্ডা চালু হওয়ার সময়, idle RAM — লিখে পাঠান। এটাই Flutter-সিদ্ধান্তের (ADR-003) চূড়ান্ত পরীক্ষা।
 

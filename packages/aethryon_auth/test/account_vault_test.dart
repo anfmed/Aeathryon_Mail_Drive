@@ -1,12 +1,8 @@
 import 'package:aethryon_auth/aethryon_auth.dart';
 import 'package:test/test.dart';
 
-AccountRecord rec(String id) => AccountRecord(
-  id: id,
-  kind: 'webdav',
-  label: 'L$id',
-  settings: {'url': 'https://h/', 'username': 'u'},
-);
+AccountRecord rec(String id) =>
+    AccountRecord(id: id, kind: 'webdav', label: 'L$id', settings: {'url': 'https://h/', 'username': 'u'});
 
 void main() {
   test('save/list/secret/remove round-trip', () async {
@@ -33,23 +29,7 @@ void main() {
     expect(await AccountVault(mem, 'aethryon.mail').secret('1'), isNull);
   });
   test('secrets are rejected in non-secret settings', () {
-    expect(
-      () => AccountRecord(
-        id: '1',
-        kind: 'imap',
-        label: 'x',
-        settings: {'password': 'p'},
-      ),
-      throwsArgumentError,
-    );
-    expect(
-      () => AccountRecord(
-        id: '1',
-        kind: 'imap',
-        label: 'x',
-        settings: {'accessToken': 'p'},
-      ),
-      throwsArgumentError,
-    );
+    expect(() => AccountRecord(id: '1', kind: 'imap', label: 'x', settings: {'password': 'p'}), throwsArgumentError);
+    expect(() => AccountRecord(id: '1', kind: 'imap', label: 'x', settings: {'accessToken': 'p'}), throwsArgumentError);
   });
 }
