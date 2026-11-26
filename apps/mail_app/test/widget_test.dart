@@ -10,7 +10,9 @@ import 'package:mail_app/main.dart';
 
 import 'helpers.dart';
 
-Widget app([SecureStore? s, RecordingOpener? o]) => MailApp(services: testServices(store: s, opener: o));
+Widget app([SecureStore? s, RecordingOpener? o]) => MailApp(
+  services: testServices(store: s, opener: o),
+);
 
 Future<void> openAddAccount(WidgetTester t) async {
   await t.tap(find.text('Accounts'));
@@ -134,28 +136,31 @@ void main() {
     }
   });
 
-  testWidgets('iCloud prefills verified servers; password only in secure store', (t) async {
-    final store = SeededStore.mail();
-    await t.pumpWidget(app(store));
-    await t.pumpAndSettle();
-    await openAddAccount(t);
-    await choose(t, 'iCloud Mail');
-    expect(find.text('imap.mail.me.com'), findsOneWidget);
-    await t.enterText(find.byKey(const Key('label')), 'My iCloud');
-    await t.enterText(find.byKey(const Key('user')), 'me@icloud.com');
-    await t.enterText(find.byKey(const Key('password')), 'abcd-efgh');
-    await t.ensureVisible(find.text('Save'));
-    await t.tap(find.text('Save'));
-    await t.pumpAndSettle();
-    expect(find.text('My iCloud'), findsOneWidget);
-    expect(find.textContaining('abcd-efgh'), findsNothing);
-    final vault = AccountVault(store, 'aethryon.mail');
-    final r = (await vault.list()).single;
-    expect(r.settings.containsKey('password'), isFalse);
-    expect(r.settings['auth'], 'password');
-    expect(await vault.secret(r.id), 'abcd-efgh');
-    expect(await AccountVault(store, 'aethryon.drive').list(), isEmpty);
-  });
+  testWidgets(
+    'iCloud prefills verified servers; password only in secure store',
+    (t) async {
+      final store = SeededStore.mail();
+      await t.pumpWidget(app(store));
+      await t.pumpAndSettle();
+      await openAddAccount(t);
+      await choose(t, 'iCloud Mail');
+      expect(find.text('imap.mail.me.com'), findsOneWidget);
+      await t.enterText(find.byKey(const Key('label')), 'My iCloud');
+      await t.enterText(find.byKey(const Key('user')), 'me@icloud.com');
+      await t.enterText(find.byKey(const Key('password')), 'abcd-efgh');
+      await t.ensureVisible(find.text('Save'));
+      await t.tap(find.text('Save'));
+      await t.pumpAndSettle();
+      expect(find.text('My iCloud'), findsOneWidget);
+      expect(find.textContaining('abcd-efgh'), findsNothing);
+      final vault = AccountVault(store, 'aethryon.mail');
+      final r = (await vault.list()).single;
+      expect(r.settings.containsKey('password'), isFalse);
+      expect(r.settings['auth'], 'password');
+      expect(await vault.secret(r.id), 'abcd-efgh');
+      expect(await AccountVault(store, 'aethryon.drive').list(), isEmpty);
+    },
+  );
 
   testWidgets('accessibility: tap targets and labels (Inbox)', (t) async {
     final handle = t.ensureSemantics();
@@ -166,24 +171,35 @@ void main() {
     handle.dispose();
   });
 
-  testWidgets('welcome: shown on first launch only, closed by Get Started, stays closed after a restart', (t) async {
-    final store = SeededStore.mail(welcomeDone: false);
-    await t.pumpWidget(app(store));
-    await t.pumpAndSettle();
-    expect(find.text('Welcome!'), findsOneWidget);
-    expect(find.text('Version 1.2.3 (45)'), findsOneWidget);
-    await t.tap(find.text('Get Started'));
-    await t.pumpAndSettle();
-    expect(find.text('Welcome!'), findsNothing);
-    expect(find.text('Welcome'), findsOneWidget); // the demo inbox message — the normal home screen works
-    await t.pumpWidget(const SizedBox());
-    await t.pumpWidget(app(store));
-    await t.pumpAndSettle();
-    expect(find.text('Welcome!'), findsNothing);
-    expect(jsonDecode(store.m['aethryon.mail.settings']!)['welcomeDone'], true);
-  });
+  testWidgets(
+    'welcome: shown on first launch only, closed by Get Started, stays closed after a restart',
+    (t) async {
+      final store = SeededStore.mail(welcomeDone: false);
+      await t.pumpWidget(app(store));
+      await t.pumpAndSettle();
+      expect(find.text('Welcome!'), findsOneWidget);
+      expect(find.text('Version 1.2.3 (45)'), findsOneWidget);
+      await t.tap(find.text('Get Started'));
+      await t.pumpAndSettle();
+      expect(find.text('Welcome!'), findsNothing);
+      expect(
+        find.text('Welcome'),
+        findsOneWidget,
+      ); // the demo inbox message — the normal home screen works
+      await t.pumpWidget(const SizedBox());
+      await t.pumpWidget(app(store));
+      await t.pumpAndSettle();
+      expect(find.text('Welcome!'), findsNothing);
+      expect(
+        jsonDecode(store.m['aethryon.mail.settings']!)['welcomeDone'],
+        true,
+      );
+    },
+  );
 
-  testWidgets('saving the auto-refresh interval keeps the welcome flag', (t) async {
+  testWidgets('saving the auto-refresh interval keeps the welcome flag', (
+    t,
+  ) async {
     final store = SeededStore.mail();
     await t.pumpWidget(app(store));
     await t.pumpAndSettle();
@@ -193,43 +209,56 @@ void main() {
     await t.pumpAndSettle();
     await t.tap(find.text('Every 30 min').last);
     await t.pumpAndSettle();
-    final saved = jsonDecode(store.m['aethryon.mail.settings']!) as Map<String, dynamic>;
+    final saved =
+        jsonDecode(store.m['aethryon.mail.settings']!) as Map<String, dynamic>;
     expect(saved['autoRefreshMinutes'], 30);
     expect(saved['welcomeDone'], true);
     await t.pumpWidget(const SizedBox());
   });
 
-  testWidgets('about: credits, dynamic version; both actions open the configured urls', (t) async {
-    final o = RecordingOpener();
-    await t.pumpWidget(app(null, o));
-    await t.pumpAndSettle();
-    await t.tap(find.text('Settings'));
-    await t.pumpAndSettle();
-    await t.tap(find.text('About'));
-    await t.pumpAndSettle();
-    expect(find.text('Md. Shakil Hossain'), findsOneWidget);
-    expect(find.text('Version 1.2.3 (45)'), findsOneWidget);
-    await t.tap(find.byKey(const Key('about_get_in_touch')));
-    await t.pumpAndSettle();
-    await t.tap(find.byKey(const Key('about_support')));
-    await t.pumpAndSettle();
-    expect(o.opened.map((u) => u.toString()), [defaultLinks.getInTouchUrl, defaultLinks.supportUrl]);
-  });
+  testWidgets(
+    'about: credits, dynamic version; both actions open the configured urls',
+    (t) async {
+      final o = RecordingOpener();
+      await t.pumpWidget(app(null, o));
+      await t.pumpAndSettle();
+      await t.tap(find.text('Settings'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('About'));
+      await t.pumpAndSettle();
+      expect(find.text('Md. Shakil Hossain'), findsOneWidget);
+      expect(find.text('Version 1.2.3 (45)'), findsOneWidget);
+      await t.tap(find.byKey(const Key('about_get_in_touch')));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('about_support')));
+      await t.pumpAndSettle();
+      expect(o.opened.map((u) => u.toString()), [
+        defaultLinks.getInTouchUrl,
+        defaultLinks.supportUrl,
+      ]);
+    },
+  );
 
-  testWidgets('Support button sits in the Inbox toolbar corner, beside (not over) the refresh action, and opens the same url', (t) async {
-    final o = RecordingOpener();
-    await t.pumpWidget(app(null, o));
-    await t.pumpAndSettle();
-    final support = t.getRect(find.byKey(const Key('support_button')));
-    final refresh = t.getRect(find.byTooltip('Check for new mail'));
-    final title = t.getRect(find.text('Aethryon Mail'));
-    expect(support.overlaps(refresh), isFalse);
-    expect(support.overlaps(title), isFalse);
-    expect(support.right <= refresh.left + 1, isTrue); // Support sits to the left of Refresh
-    await t.tap(find.byKey(const Key('support_button')));
-    await t.pumpAndSettle();
-    expect(o.opened.single.toString(), defaultLinks.supportUrl);
-  });
+  testWidgets(
+    'Support button sits in the Inbox toolbar corner, beside (not over) the refresh action, and opens the same url',
+    (t) async {
+      final o = RecordingOpener();
+      await t.pumpWidget(app(null, o));
+      await t.pumpAndSettle();
+      final support = t.getRect(find.byKey(const Key('support_button')));
+      final refresh = t.getRect(find.byTooltip('Check for new mail'));
+      final title = t.getRect(find.text('Aethryon Mail'));
+      expect(support.overlaps(refresh), isFalse);
+      expect(support.overlaps(title), isFalse);
+      expect(
+        support.right <= refresh.left + 1,
+        isTrue,
+      ); // Support sits to the left of Refresh
+      await t.tap(find.byKey(const Key('support_button')));
+      await t.pumpAndSettle();
+      expect(o.opened.single.toString(), defaultLinks.supportUrl);
+    },
+  );
 
   testWidgets('settings offers Send feedback', (t) async {
     await t.pumpWidget(app());

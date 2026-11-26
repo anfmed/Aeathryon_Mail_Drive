@@ -111,11 +111,15 @@ class MemoryMailTransport implements MailTransport {
   };
 
   @override
-  Future<Map<int, Set<String>>> fetchFlags(String path, {int? changedSinceModSeq}) async => {
-        for (final h in _folders[path]!)
-          if (!(_condstore && changedSinceModSeq != null) || (_mod[path]![h.uid] ?? 0) > changedSinceModSeq)
-            h.uid: h.flags,
-      };
+  Future<Map<int, Set<String>>> fetchFlags(
+    String path, {
+    int? changedSinceModSeq,
+  }) async => {
+    for (final h in _folders[path]!)
+      if (!(_condstore && changedSinceModSeq != null) ||
+          (_mod[path]![h.uid] ?? 0) > changedSinceModSeq)
+        h.uid: h.flags,
+  };
 
   @override
   Future<void> sendPlain({

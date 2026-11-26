@@ -30,9 +30,11 @@ class OAuthTokenSource {
     final cur = await tokens.read(accountId);
     if (cur == null) throw OAuthError('reauth_required', 'no tokens stored');
     if (!cur.needsRefresh(nowUtc())) return cur.accessToken;
-    final fresh = await (_inflight[accountId] ??=
-        _refresh(accountId, cur).whenComplete(() {
-          _inflight.remove(accountId); // block body: must NOT return the future being completed
+    final fresh = await (_inflight[accountId] ??= _refresh(accountId, cur)
+        .whenComplete(() {
+          _inflight.remove(
+            accountId,
+          ); // block body: must NOT return the future being completed
         }));
     return fresh.accessToken;
   }

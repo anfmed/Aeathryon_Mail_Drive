@@ -58,7 +58,10 @@ Future<List<SelfTestStep>> runAdapterSelfTest(
 
   final fid = folderId;
   if (fid != null) {
-    final up = await step<RemoteNode>('upload 2 KB file', () => a.upload(accountId, fid, 'a.bin', Stream.value(data), data.length));
+    final up = await step<RemoteNode>(
+      'upload 2 KB file',
+      () => a.upload(accountId, fid, 'a.bin', Stream.value(data), data.length),
+    );
     await step<void>('list shows the file with the right size', () async {
       final l = await a.listChildren(accountId, fid);
       final f = l.items.firstWhere((n) => n.name == 'a.bin');
@@ -84,11 +87,15 @@ Future<List<SelfTestStep>> runAdapterSelfTest(
       await step<void>('rename/move', () async {
         await a.move(accountId, up.id, fid, 'b.bin');
         final l = await a.listChildren(accountId, fid);
-        if (!l.items.any((n) => n.name == 'b.bin')) throw StateError('not renamed');
+        if (!l.items.any((n) => n.name == 'b.bin'))
+          throw StateError('not renamed');
       });
     }
     await step<void>('quota', () async => a.quota(accountId), optional: true);
-    await step<void>('clean up (delete the test folder)', () => a.permanentDelete(accountId, fid));
+    await step<void>(
+      'clean up (delete the test folder)',
+      () => a.permanentDelete(accountId, fid),
+    );
   }
   return steps;
 }

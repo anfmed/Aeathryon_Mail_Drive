@@ -14,28 +14,29 @@ class BrandLogo extends StatelessWidget {
   const BrandLogo({super.key, this.size = 120});
   @override
   Widget build(BuildContext context) => Semantics(
-        label: 'Aethryon Labs logo',
-        image: true,
-        child: ExcludeSemantics(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(size * 0.12),
-            child: Container(
-              color: Colors.white,
-              width: size,
-              height: size,
-              child: Image.asset(
-                _logoAsset,
-                package: 'aethryon_brand',
-                width: size,
-                height: size,
-                fit: BoxFit.contain,
-                filterQuality: FilterQuality.high,
-                errorBuilder: (_, __, ___) => const Center(child: Text('Aethryon Labs')),
-              ),
-            ),
+    label: 'Aethryon Labs logo',
+    image: true,
+    child: ExcludeSemantics(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(size * 0.12),
+        child: Container(
+          color: Colors.white,
+          width: size,
+          height: size,
+          child: Image.asset(
+            _logoAsset,
+            package: 'aethryon_brand',
+            width: size,
+            height: size,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.high,
+            errorBuilder: (_, __, ___) =>
+                const Center(child: Text('Aethryon Labs')),
           ),
         ),
-      );
+      ),
+    ),
+  );
 }
 
 /// Company and developer credits — two separate identities, extendable with more developers.
@@ -45,16 +46,28 @@ class CreditsBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    final label = t.labelSmall?.copyWith(letterSpacing: 1.6, color: Theme.of(context).colorScheme.onSurfaceVariant);
-    return Column(mainAxisSize: MainAxisSize.min, children: [
-      Text('DEVELOPED BY', style: label),
-      const SizedBox(height: Space.xs),
-      Text(credits.organization, style: t.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-      const SizedBox(height: Space.m),
-      Text(credits.developers.length == 1 ? 'DEVELOPER' : 'DEVELOPERS', style: label),
-      const SizedBox(height: Space.xs),
-      for (final d in credits.developers) Text(d, style: t.titleSmall),
-    ]);
+    final label = t.labelSmall?.copyWith(
+      letterSpacing: 1.6,
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('DEVELOPED BY', style: label),
+        const SizedBox(height: Space.xs),
+        Text(
+          credits.organization,
+          style: t.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: Space.m),
+        Text(
+          credits.developers.length == 1 ? 'DEVELOPER' : 'DEVELOPERS',
+          style: label,
+        ),
+        const SizedBox(height: Space.xs),
+        for (final d in credits.developers) Text(d, style: t.titleSmall),
+      ],
+    );
   }
 }
 
@@ -63,14 +76,20 @@ class _VersionText extends StatelessWidget {
   const _VersionText(this.info);
   @override
   Widget build(BuildContext context) => FutureBuilder<AppVersion>(
-        future: info.load(),
-        builder: (context, s) => Text(s.hasData ? 'Version ${s.data!.display}' : 'Version …',
-            style: Theme.of(context).textTheme.bodySmall),
-      );
+    future: info.load(),
+    builder: (context, s) => Text(
+      s.hasData ? 'Version ${s.data!.display}' : 'Version …',
+      style: Theme.of(context).textTheme.bodySmall,
+    ),
+  );
 }
 
 Future<void> showWelcomeDialog(BuildContext context, BrandServices s) =>
-    showDialog<void>(context: context, barrierDismissible: false, builder: (_) => WelcomeDialog(services: s));
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => WelcomeDialog(services: s),
+    );
 
 /// First-launch welcome. Friendly and roomy (the About screen is deliberately more compact).
 class WelcomeDialog extends StatelessWidget {
@@ -81,29 +100,51 @@ class WelcomeDialog extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     return AlertDialog(
       scrollable: true,
-      contentPadding: const EdgeInsets.fromLTRB(Space.xl, Space.xl, Space.xl, Space.m),
-      content: Column(mainAxisSize: MainAxisSize.min, children: [
-        Text('Welcome!', style: t.headlineMedium?.copyWith(fontWeight: FontWeight.w700), textAlign: TextAlign.center),
-        const SizedBox(height: Space.s),
-        Text('Thank You for Choosing Our App', style: t.titleMedium, textAlign: TextAlign.center),
-        const SizedBox(height: Space.m),
-        Text(
-          "We're delighted to have you here! We hope you enjoy using the app and find it helpful. "
-          "Your experience matters to us, and we'd love to hear your thoughts after you've had a chance to explore it.",
-          style: t.bodyMedium,
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: Space.xl),
-        const BrandLogo(size: 128),
-        const SizedBox(height: Space.l),
-        const CreditsBlock(),
-        const SizedBox(height: Space.m),
-        _VersionText(services.info),
-      ]),
+      contentPadding: const EdgeInsets.fromLTRB(
+        Space.xl,
+        Space.xl,
+        Space.xl,
+        Space.m,
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Welcome!',
+            style: t.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: Space.s),
+          Text(
+            'Thank You for Choosing Our App',
+            style: t.titleMedium,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: Space.m),
+          Text(
+            "We're delighted to have you here! We hope you enjoy using the app and find it helpful. "
+            "Your experience matters to us, and we'd love to hear your thoughts after you've had a chance to explore it.",
+            style: t.bodyMedium,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: Space.xl),
+          const BrandLogo(size: 128),
+          const SizedBox(height: Space.l),
+          const CreditsBlock(),
+          const SizedBox(height: Space.m),
+          _VersionText(services.info),
+        ],
+      ),
       actionsAlignment: MainAxisAlignment.center,
       actionsPadding: const EdgeInsets.only(bottom: Space.l),
       actions: [
-        FilledButton(onPressed: () => Navigator.of(context).pop(), child: const Padding(padding: EdgeInsets.symmetric(horizontal: Space.xl), child: Text('Get Started'))),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: Space.xl),
+            child: Text('Get Started'),
+          ),
+        ),
       ],
     );
   }
@@ -124,38 +165,48 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('About')),
-        body: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(Space.l),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                const BrandLogo(size: 96),
-                const SizedBox(height: Space.l),
-                const CreditsBlock(),
-                const SizedBox(height: Space.m),
-                _VersionText(services.info),
-                const SizedBox(height: Space.xl),
-                Wrap(spacing: Space.m, runSpacing: Space.s, alignment: WrapAlignment.center, children: [
+    appBar: AppBar(title: const Text('About')),
+    body: Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(Space.l),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const BrandLogo(size: 96),
+              const SizedBox(height: Space.l),
+              const CreditsBlock(),
+              const SizedBox(height: Space.m),
+              _VersionText(services.info),
+              const SizedBox(height: Space.xl),
+              Wrap(
+                spacing: Space.m,
+                runSpacing: Space.s,
+                alignment: WrapAlignment.center,
+                children: [
                   FilledButton.icon(
                     key: const Key('about_get_in_touch'),
                     icon: const Icon(Icons.mail_outline),
                     label: const Text('Get In Touch'),
-                    onPressed: () => _open(context, services.links.links.getInTouchUrl),
+                    onPressed: () =>
+                        _open(context, services.links.links.getInTouchUrl),
                   ),
                   OutlinedButton.icon(
                     key: const Key('about_support'),
                     icon: const Icon(Icons.support_agent),
                     label: const Text('Support'),
-                    onPressed: () => _open(context, services.links.links.supportUrl),
+                    onPressed: () =>
+                        _open(context, services.links.links.supportUrl),
                   ),
-                ]),
-              ]),
-            ),
+                ],
+              ),
+            ],
           ),
         ),
-      );
+      ),
+    ),
+  );
 }
 
 /// Small, highlighted Support button for an unused AppBar corner. Colour comes from the theme's
@@ -180,8 +231,12 @@ class SupportButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: Space.m),
         ),
         onPressed: () async {
-          final ok = await openLink(services.opener, services.links.links.supportUrl);
-          if (!ok && context.mounted) _snack(context, 'Could not open the link.');
+          final ok = await openLink(
+            services.opener,
+            services.links.links.supportUrl,
+          );
+          if (!ok && context.mounted)
+            _snack(context, 'Could not open the link.');
         },
       ),
     );
@@ -212,10 +267,11 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
   Future<void> _send() async {
     final problem = FeedbackClient.validateMessage(_message.text);
-    if (problem != null) return setState(() {
-      _status = problem;
-      _statusIsError = true;
-    });
+    if (problem != null)
+      return setState(() {
+        _status = problem;
+        _statusIsError = true;
+      });
     setState(() {
       _sending = true;
       _status = null;
@@ -259,37 +315,60 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       appBar: AppBar(title: const Text('Send feedback')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(Space.l),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          DropdownButtonFormField<String>(
-            key: const Key('category'),
-            initialValue: _category,
-            decoration: const InputDecoration(labelText: 'Category'),
-            items: [for (final c in feedbackCategories) DropdownMenuItem(value: c, child: Text(c[0].toUpperCase() + c.substring(1)))],
-            onChanged: (v) => setState(() => _category = v ?? 'general'),
-          ),
-          const SizedBox(height: Space.m),
-          TextField(
-            key: const Key('message'),
-            controller: _message,
-            minLines: 5,
-            maxLines: 10,
-            maxLength: 2000,
-            decoration: const InputDecoration(labelText: 'Your feedback', alignLabelWithHint: true, border: OutlineInputBorder()),
-          ),
-          const SizedBox(height: Space.s),
-          TextField(
-            key: const Key('contact'),
-            controller: _contact,
-            maxLength: 200,
-            decoration: const InputDecoration(labelText: 'How can we reach you? (optional)'),
-          ),
-          const SizedBox(height: Space.s),
-          const Text('Nothing else is sent — no device ID, no IP address.'),
-          const SizedBox(height: Space.m),
-          if (_status != null) Text(_status!, key: const Key('status'), style: TextStyle(color: _statusIsError ? cs.error : cs.primary)),
-          const SizedBox(height: Space.m),
-          FilledButton(onPressed: _sending ? null : _send, child: Text(_sending ? 'Sending…' : 'Send')),
-        ]),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DropdownButtonFormField<String>(
+              key: const Key('category'),
+              initialValue: _category,
+              decoration: const InputDecoration(labelText: 'Category'),
+              items: [
+                for (final c in feedbackCategories)
+                  DropdownMenuItem(
+                    value: c,
+                    child: Text(c[0].toUpperCase() + c.substring(1)),
+                  ),
+              ],
+              onChanged: (v) => setState(() => _category = v ?? 'general'),
+            ),
+            const SizedBox(height: Space.m),
+            TextField(
+              key: const Key('message'),
+              controller: _message,
+              minLines: 5,
+              maxLines: 10,
+              maxLength: 2000,
+              decoration: const InputDecoration(
+                labelText: 'Your feedback',
+                alignLabelWithHint: true,
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: Space.s),
+            TextField(
+              key: const Key('contact'),
+              controller: _contact,
+              maxLength: 200,
+              decoration: const InputDecoration(
+                labelText: 'How can we reach you? (optional)',
+              ),
+            ),
+            const SizedBox(height: Space.s),
+            const Text('Nothing else is sent — no device ID, no IP address.'),
+            const SizedBox(height: Space.m),
+            if (_status != null)
+              Text(
+                _status!,
+                key: const Key('status'),
+                style: TextStyle(color: _statusIsError ? cs.error : cs.primary),
+              ),
+            const SizedBox(height: Space.m),
+            FilledButton(
+              onPressed: _sending ? null : _send,
+              child: Text(_sending ? 'Sending…' : 'Send'),
+            ),
+          ],
+        ),
       ),
     );
   }

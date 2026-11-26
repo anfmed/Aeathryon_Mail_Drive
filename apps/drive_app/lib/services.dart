@@ -20,7 +20,10 @@ class DriveServices {
   final http.Client httpClient;
   final Future<DriveDb> Function() openDb;
   final BrandServices brand;
-  late final TransferController transfers = TransferController(files, explain: explainError);
+  late final TransferController transfers = TransferController(
+    files,
+    explain: explainError,
+  );
   DriveServices({
     required this.secureStore,
     required this.files,
