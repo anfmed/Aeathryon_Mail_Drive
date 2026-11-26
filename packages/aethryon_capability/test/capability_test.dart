@@ -16,8 +16,9 @@ void main() {
   });
   test('runtime probe overrides manifest', () {
     final r = CapabilityRegistry()
-      ..register('p', {'a': const Capability.unverified()},
-          overall: const Capability.unverified());
+      ..register('p', {
+        'a': const Capability.unverified(),
+      }, overall: const Capability.unverified());
     r.applyProbe('p', 'a', Capability.full(sources: ['probe']));
     expect(r.lookup('p', 'a').enabledInUi, isTrue);
   });

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:sqlite3/sqlite3.dart';
 import 'package:test/test.dart';
 
@@ -24,22 +25,43 @@ void main() {
     db.close();
 
     final bytes = File(path).readAsBytesSync();
-    expect(latin1.decode(bytes.sublist(0, 15)), isNot('SQLite format 3'), reason: 'header must be encrypted');
-    expect(latin1.decode(bytes).contains(marker), isFalse, reason: 'content must not appear in plaintext');
+    expect(
+      latin1.decode(bytes.sublist(0, 15)),
+      isNot('SQLite format 3'),
+      reason: 'header must be encrypted',
+    );
+    expect(
+      latin1.decode(bytes).contains(marker),
+      isFalse,
+      reason: 'content must not appear in plaintext',
+    );
 
     db = sqlite3.open(path);
-    expect(() => db.select('SELECT count(*) FROM t'), throwsA(isA<SqliteException>()), reason: 'no key');
+    expect(
+      () => db.select('SELECT count(*) FROM t'),
+      throwsA(isA<SqliteException>()),
+      reason: 'no key',
+    );
     db.close();
 
     db = sqlite3.open(path);
     db.execute("PRAGMA key = 'wrong';");
-    expect(() => db.select('SELECT count(*) FROM t'), throwsA(isA<SqliteException>()), reason: 'wrong key');
+    expect(
+      () => db.select('SELECT count(*) FROM t'),
+      throwsA(isA<SqliteException>()),
+      reason: 'wrong key',
+    );
     db.close();
 
     db = sqlite3.open(path);
     db.execute("PRAGMA key = 'correct horse battery';");
     expect(db.select('SELECT x FROM t').first['x'], marker);
-    expect(db.select("SELECT count(*) AS n FROM f WHERE f MATCH 'quarter*'").first['n'], 1);
+    expect(
+      db
+          .select("SELECT count(*) AS n FROM f WHERE f MATCH 'quarter*'")
+          .first['n'],
+      1,
+    );
     db.close();
   });
 }

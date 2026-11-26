@@ -2,14 +2,20 @@ class ChunkConstraint {
   final int multipleOf; // all chunks except the last must be a multiple
   final int minChunk;
   final int maxChunk;
-  const ChunkConstraint(
-      {this.multipleOf = 1, this.minChunk = 1, required this.maxChunk});
+  const ChunkConstraint({
+    this.multipleOf = 1,
+    this.minChunk = 1,
+    required this.maxChunk,
+  });
 
   /// Verified (Phase 0, source S11, Microsoft Graph createUploadSession):
   /// fragment size must be a multiple of 320 KiB. maxChunk is a conservative
   /// planning value, NOT a documented limit (UNVERIFIED).
-  static const oneDrive =
-      ChunkConstraint(multipleOf: 327680, minChunk: 327680, maxChunk: 10 * 1024 * 1024);
+  static const oneDrive = ChunkConstraint(
+    multipleOf: 327680,
+    minChunk: 327680,
+    maxChunk: 10 * 1024 * 1024,
+  );
 
   /// Dropbox (S13, SDK doc): <=150 MB per request. We stay at/below 100 MiB.
   static const dropbox = ChunkConstraint(maxChunk: 100 * 1024 * 1024);

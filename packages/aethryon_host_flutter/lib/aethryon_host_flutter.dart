@@ -25,7 +25,8 @@ class FlutterFilePlatform implements FilePlatform {
   }
 
   @override
-  Future<String> appDataDir() async => (await getApplicationSupportDirectory()).path;
+  Future<String> appDataDir() async =>
+      (await getApplicationSupportDirectory()).path;
 
   @override
   Future<String> downloadsDir() async {

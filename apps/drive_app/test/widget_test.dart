@@ -19,7 +19,9 @@ Future<void> openAccounts(WidgetTester t) async {
 }
 
 void main() {
-  testWidgets('lists folders first, opens a folder, offers up-navigation', (t) async {
+  testWidgets('lists folders first, opens a folder, offers up-navigation', (
+    t,
+  ) async {
     await t.pumpWidget(app());
     await t.pumpAndSettle();
     expect(find.text('Documents'), findsOneWidget);
@@ -44,17 +46,22 @@ void main() {
     expect(find.text('readme.md'), findsOneWidget);
   });
 
-  testWidgets('settings: provider status never shows unverified as supported; storage problem is explained', (t) async {
-    await t.pumpWidget(app());
-    await t.tap(find.text('Settings'));
-    await t.pumpAndSettle();
-    expect(find.text('unverified'), findsWidgets);
-    expect(find.text('full'), findsNothing);
-    expect(find.textContaining('disabled in tests'), findsOneWidget);
-    expect(find.text('Diagnostics'), findsOneWidget);
-  });
+  testWidgets(
+    'settings: provider status never shows unverified as supported; storage problem is explained',
+    (t) async {
+      await t.pumpWidget(app());
+      await t.tap(find.text('Settings'));
+      await t.pumpAndSettle();
+      expect(find.text('unverified'), findsWidgets);
+      expect(find.text('full'), findsNothing);
+      expect(find.textContaining('disabled in tests'), findsOneWidget);
+      expect(find.text('Diagnostics'), findsOneWidget);
+    },
+  );
 
-  testWidgets('transfers and search show honest empty/unavailable states', (t) async {
+  testWidgets('transfers and search show honest empty/unavailable states', (
+    t,
+  ) async {
     await t.pumpWidget(app());
     await t.tap(find.text('Transfers'));
     await t.pumpAndSettle();
@@ -89,7 +96,9 @@ void main() {
     expect(find.byKey(const Key('error')), findsOneWidget);
   });
 
-  testWidgets('add-account form rejects empty input and insecure http', (t) async {
+  testWidgets('add-account form rejects empty input and insecure http', (
+    t,
+  ) async {
     await t.pumpWidget(app());
     await openAccounts(t);
     await t.tap(find.text('Add account'));
@@ -100,7 +109,10 @@ void main() {
     await t.pumpAndSettle();
     expect(find.byKey(const Key('error')), findsOneWidget);
     await t.enterText(find.byKey(const Key('label')), 'X');
-    await t.enterText(find.byKey(const Key('url')), 'http://cloud.example/dav/');
+    await t.enterText(
+      find.byKey(const Key('url')),
+      'http://cloud.example/dav/',
+    );
     await t.tap(find.text('Save'));
     await t.pumpAndSettle();
     expect(find.textContaining('https'), findsWidgets);
@@ -131,7 +143,9 @@ void main() {
     expect(find.byTooltip('Run self-test for Home NAS'), findsOneWidget);
   });
 
-  testWidgets('accessibility: tap targets and labels (Files screen)', (t) async {
+  testWidgets('accessibility: tap targets and labels (Files screen)', (
+    t,
+  ) async {
     final handle = t.ensureSemantics();
     await t.pumpWidget(app());
     await t.pumpAndSettle();

@@ -34,6 +34,14 @@ class DriveServices {
 Future<DriveDb> openProductionDb(SecureStore store, FilePlatform files) async {
   final dir = await files.appDataDir();
   final r = await openAppDatabase(
-      store: store, namespace: 'aethryon.drive', path: '$dir/drive.db', schema: driveSchemaV1);
-  return DriveDb(store: r.db == null ? null : DriveStore(r.db!), problem: r.problem, recreated: r.recreated);
+    store: store,
+    namespace: 'aethryon.drive',
+    path: '$dir/drive.db',
+    schema: driveSchemaV1,
+  );
+  return DriveDb(
+    store: r.db == null ? null : DriveStore(r.db!),
+    problem: r.problem,
+    recreated: r.recreated,
+  );
 }

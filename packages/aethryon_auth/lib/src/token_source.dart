@@ -1,4 +1,5 @@
 import 'package:http/http.dart' as http;
+
 import '../aethryon_auth.dart' show TokenSet, TokenStore;
 import 'oauth.dart';
 
@@ -10,7 +11,8 @@ class OAuthTokenSource {
   final Uri tokenEndpoint;
   final String clientId;
   final String? clientSecret;
-  final Future<String?> Function()? clientSecretProvider; // e.g. read from the secure store on demand
+  final Future<String?> Function()?
+  clientSecretProvider; // e.g. read from the secure store on demand
   final DateTime Function() nowUtc;
   final Map<String, Future<TokenSet>> _inflight = {};
 
@@ -43,14 +45,16 @@ class OAuthTokenSource {
         client: client,
         tokenEndpoint: tokenEndpoint,
         clientId: clientId,
-        clientSecret: clientSecret ?? _nonEmpty(await clientSecretProvider?.call()),
+        clientSecret:
+            clientSecret ?? _nonEmpty(await clientSecretProvider?.call()),
         refreshToken: rt,
         nowUtc: nowUtc,
       );
       await tokens.write(accountId, fresh);
       return fresh;
     } on OAuthError catch (e) {
-      if (e.code == 'invalid_grant') throw OAuthError('reauth_required', 'refresh token was rejected');
+      if (e.code == 'invalid_grant')
+        throw OAuthError('reauth_required', 'refresh token was rejected');
       rethrow;
     }
   }

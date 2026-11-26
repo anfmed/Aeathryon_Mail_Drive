@@ -1,5 +1,7 @@
 import 'dart:convert';
+
 import 'package:aethryon_platform/aethryon_platform.dart';
+
 import '../aethryon_auth.dart' show TokenSet, TokenStore;
 
 class MemorySecureStore implements SecureStore {
