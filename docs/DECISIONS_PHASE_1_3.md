@@ -78,3 +78,17 @@ Local-only অ্যাপের CASA-ছাড় আছে কি না (S26 
 | 050 | ডাউনলোড: desktop = `Downloads/Aethryon`; ফোন = অ্যাপ-documents/`Aethryon` (SAF save-dialog নয় — অতিরিক্ত plugin এড়াতে); নাম sanitize; কখনো overwrite নয় | G1 + G6 | ফোনে ফাইল-ম্যানেজার দিয়ে দেখতে হবে |
 | 051 | Upload: ≤৪ MiB বা non-resumable provider ⇒ একক stream-request; বড় + resumable provider ⇒ session | G1 (RAM) | WebDAV-এ resume নেই |
 | 052 | **কোনো telemetry/analytics/crash-report নেই**; Diagnostics শুধু স্থানীয়, ব্যবহারকারী নিজে কপি করে | G2 + G6 | Privacy Policy খসড়া |
+
+---
+# Welcome / About / Support / Feedback (লক্ষ্য-ভিত্তিক)
+| ADR | সিদ্ধান্ত | লক্ষ্য | টীকা |
+|---|---|---|---|
+| 053 | দুটি নতুন package: `aethryon_brand_core` (pure Dart: credits, **কেন্দ্রীয় link-সেবা**, URL-নিরাপত্তা, feedback client — `dart test`-এ পরীক্ষিত) ও `aethryon_brand` (Flutter UI)। দুই অ্যাপ একই কোড ব্যবহার করে — নকল নেই | G1 | — |
+| 054 | **Link একটিই উৎস:** `LinkConfigService.links` (`getInTouchUrl`, `supportUrl`)। About-এর দুই বোতাম ও আলাদা Support বোতাম সবাই এখান থেকে পড়ে। অগ্রাধিকার: সর্বশেষ **বৈধ** AUS মান → স্থানীয় cache → ডিফল্ট (`https://aethryon-labs.sh010.workers.dev/` ও `…/support/`) | — | ডিফল্ট-literal শুধু `links.dart`-এ |
+| 055 | **AUS-সংযোগ:** `GET {AUS_BASE_URL}/v1/links`, ≥৬ ঘণ্টা ব্যবধানে (throttle), ১০ সেকেন্ড timeout, ≤৬৪ KB, ব্যাকগ্রাউন্ডে, ব্যর্থতায় নীরব। `AUS_BASE_URL` build-সময়ে `--dart-define` (CI-তে GitHub **Variable**; secret নয়, কারণ URL সর্বজনীন)। খালি থাকলে নেটওয়ার্ক-কলই হয় না | G2 + G6 | **response-আকার আমি জানি না** — logical নাম `get_in_touch_url`/`support_url` (camelCase ও `links`/`data`-এর ভেতরেও) গ্রহণ করে; `docs/central-links.md` পেলে মিলিয়ে নেব |
+| 056 | **URL-নিয়ম:** শুধু `https`, host বাধ্যতামূলক, ভেতরে user:pass নয়, ফাঁকা-স্থান নয়, ≤২০৪৮ অক্ষর। remote মান **প্রতি-ঘর** যাচাই — অবৈধটি বৈধ মানকে কখনো বদলায় না। খোলার আগেও আবার যাচাই (`openLink`), ব্যর্থতায় snackbar | G6 | `javascript:`, `file:`, `intent:`, `http:` সবই প্রত্যাখ্যাত |
+| 057 | **Welcome:** প্রথম চালুতে একবার; স্থায়ী ফ্ল্যাগ `welcomeDone` অ্যাপের বিদ্যমান preference-JSON-এ (অন্য ফ্ল্যাগ মুছে না — টেস্টসহ); back/Get Started দুই-ভাবেই "দেখানো হয়েছে" ধরা হয়; কোনো feedback-অনুরোধ নেই | — | ডেটা মুছলে/পুনরায় install-এ আবার দেখাবে (অনুমোদিত) |
+| 058 | **Support বোতাম:** ছোট `FilledButton.tonalIcon` (আইকন + "Support"), রঙ থিমের tertiary-accent থেকে, Files/Inbox toolbar-এর **ডান কোণ** (খালি জায়গা; Mail-এ refresh-এর বাঁয়ে); ৪৮dp tap-target; overlap-পরীক্ষা টেস্টে | — | থিমে tertiary না থাকলে `colorSchemeSeed` নিজে বানায় |
+| 059 | **Feedback:** Settings-এ "Send feedback" (welcome-এ নয়); `POST {AUS}/v1/feedback` মালিকের দেওয়া চুক্তি অনুযায়ী (source=অ্যাপ-id, message ৩–২০০০, category, ঐচ্ছিক contact, appVersion, platform, `website:""`); ২০২⇒ধন্যবাদ+টেক্সট মোছা, ব্যর্থ/৪২৯⇒টেক্সট রাখা; **কোনো device-id/IP নয়** | G6 | `AUS_APP_ID` ডিফল্ট `com.aethryon.drive_app` / `com.aethryon.mail_app` — আপনার অ্যাপ-id আলাদা হলে বদলান |
+| 060 | **Logo:** আপনার আপলোড করা অফিসিয়াল PNG, অনুপাত ১:১ অক্ষুণ্ণ, `1254px → 640px` (১,০৯২ KB → ২৭৬ KB, আকার-লক্ষ্যের জন্য); সাদা গোলাকার টাইলে বসে (logo-র পটভূমি হালকা, তাই dark theme-এও বিকৃত হয় না); নিজে কোনো logo বানানো/বদলানো হয়নি | G1 | `packages/aethryon_brand/assets/branding/aethryon_labs_logo.png` |
+| 061 | Credits-কাঠামো `Credits(organization, developers[])` — কোম্পানি ও ব্যক্তি আলাদা; নতুন developer যোগ = তালিকায় এক লাইন | — | — |

@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'package:aethryon_brand_core/aethryon_brand_core.dart';
 import 'package:aethryon_platform/aethryon_platform.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -43,5 +45,13 @@ class FlutterUrlOpener implements UrlOpener {
   Future<void> open(Uri url) async {
     final ok = await launchUrl(url, mode: LaunchMode.externalApplication);
     if (!ok) throw StateError('could not open the system browser');
+  }
+}
+
+class FlutterAppInfo implements AppInfo {
+  @override
+  Future<AppVersion> load() async {
+    final i = await PackageInfo.fromPlatform();
+    return AppVersion(i.version, i.buildNumber);
   }
 }

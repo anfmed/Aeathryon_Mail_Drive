@@ -10,3 +10,5 @@ dependencies:
   file_selector: any      # flutter.dev plugin; licence/size via dependency gate
   path_provider: any      # flutter.dev plugin
   url_launcher: any       # flutter.dev plugin
+  package_info_plus: any  # Flutter Community plugin: real version/build metadata
+  aethryon_brand_core: {path: ../aethryon_brand_core}

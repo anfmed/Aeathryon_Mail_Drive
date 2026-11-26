@@ -30,6 +30,16 @@
 6. ☐ (Release চাইলে) `docs/RELEASE_GUIDE.md` §১: keystore + ৪টি secret। না চাইলে বাদ।
 7. ☐ আপনার সিদ্ধান্ত: লাইসেন্স (ADR-021) · Privacy Policy-র ইমেইল (`[CONTACT-EMAIL]`) · লোগো/আইকন · Play-ফি নেবেন কি না।
 
+## A+++. v6 — Welcome / About / Support / Feedback + CI-ফিক্স
+1. ☐ ZIP-এর ফাইল দিয়ে overwrite → push → `format` শেষে `git pull` → `ci` চালান (অতিরিক্ত পরীক্ষা-সহ)।
+2. ☐ **AUS চালু করতে (একবার):** GitHub → Settings → Secrets and variables → Actions → **Variables** ট্যাব → *New repository variable* → নাম `AUS_BASE_URL`, মান আপনার AUS Worker-এর https ঠিকানা (যে URL-এ Dashboard খোলেন; শেষে `/` না দিলেও চলবে)। এটি secret নয়। না দিলে: link ডিফল্ট/cache থেকে চলবে, Feedback "not set up" বলবে।
+3. ☐ **আমাকে পাঠান:** আপনার `docs/central-links.md`-এর লেখা (বা `GET /v1/links`-এর একটি নমুনা response) — যাতে parser হুবহু মিলিয়ে নিতে পারি। ⚠ AUS-এর আসল গঠন আমি জানি না; এখন অনুমান-ভিত্তিক।
+4. ☐ অ্যাপ-id: Feedback-এর `source` ডিফল্টে `com.aethryon.drive_app` / `com.aethryon.mail_app`। আপনার AUS-এ অন্য id নিবন্ধিত থাকলে বলুন।
+5. ☐ build-এর পর ফোনে: নতুন install → **Welcome** একবার দেখাচ্ছে? Get Started → হোম; অ্যাপ বন্ধ করে আবার খুললে আর আসে না? Settings → **About** (logo, DEVELOPED BY Aethryon Labs, DEVELOPER Md. Shakil Hossain, সঠিক version) → Get In Touch / Support ব্রাউজারে খোলে? toolbar-এর ডানে ছোট **Support** বোতাম একই পাতা খোলে?
+6. ☐ Settings → **Send feedback** → একটি টেস্ট বার্তা পাঠিয়ে AUS Dashboard-এর Feedback পাতায় এল কি না দেখুন।
+7. ☐ AUS Dashboard থেকে link বদলে ≥৬ ঘণ্টা পরে (বা অ্যাপ পুনরায় চালু) নতুন link খোলে কি না দেখুন — **এটাই "remote update" এর আসল পরীক্ষা, আমি করতে পারিনি।**
+8. ☐ CI-র লাল হলে: এবার `loading test/store_test.dart` এর **পূর্ণ ত্রুটি-বার্তা** (expanded রিপোর্টারে আসবে) পাঠান।
+
 ## B. দ্রুত ফোন/PC পরিমাপ (প্রায় ৩০ মিনিট, বিনামূল্যে)
 9. ☐ `docs/MEASUREMENT_PROTOCOL.md` অনুযায়ী আপনার সবচেয়ে দুর্বল Android ফোন ও ৪ GB Windows PC-তে: ঠান্ডা চালু হওয়ার সময়, idle RAM — লিখে পাঠান। এটাই Flutter-সিদ্ধান্তের (ADR-003) চূড়ান্ত পরীক্ষা।
 

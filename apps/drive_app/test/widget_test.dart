@@ -1,13 +1,17 @@
+import 'dart:convert';
+
 import 'package:aethryon_auth/aethryon_auth.dart';
+import 'package:aethryon_brand/aethryon_brand.dart';
 import 'package:drive_app/main.dart';
 import 'package:drive_app/services.dart';
+import 'package:aethryon_platform/aethryon_platform.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'helpers.dart';
 
-Widget app({MemorySecureStore? store, Future<DriveDb> Function()? openDb}) =>
-    DriveApp(services: testServices(store: store, openDb: openDb));
+Widget app({SecureStore? store, Future<DriveDb> Function()? openDb, RecordingOpener? opener}) =>
+    DriveApp(services: testServices(store: store, openDb: openDb, opener: opener));
 
 Future<void> openAccounts(WidgetTester t) async {
   await t.tap(find.text('Accounts'));
@@ -103,7 +107,7 @@ void main() {
   });
 
   testWidgets('saved account is listed; the password lives only in the secure store', (t) async {
-    final store = MemorySecureStore();
+    final store = SeededStore.drive();
     await t.pumpWidget(app(store: store));
     await openAccounts(t);
     await t.tap(find.text('Add account'));
@@ -134,5 +138,79 @@ void main() {
     await expectLater(t, meetsGuideline(androidTapTargetGuideline));
     await expectLater(t, meetsGuideline(labeledTapTargetGuideline));
     handle.dispose();
+  });
+
+  testWidgets('welcome: shown on first launch only, closed by Get Started, stays closed after a restart', (t) async {
+    final store = SeededStore.drive(welcomeDone: false);
+    await t.pumpWidget(app(store: store));
+    await t.pumpAndSettle();
+    expect(find.text('Welcome!'), findsOneWidget);
+    expect(find.text('Thank You for Choosing Our App'), findsOneWidget);
+    expect(find.text('Version 1.2.3 (45)'), findsOneWidget);
+    await t.tap(find.text('Get Started'));
+    await t.pumpAndSettle();
+    expect(find.text('Welcome!'), findsNothing);
+    expect(find.text('Documents'), findsOneWidget); // normal home screen, fully usable
+    await t.pumpWidget(const SizedBox()); // "restart the app" with the same storage
+    await t.pumpWidget(app(store: store));
+    await t.pumpAndSettle();
+    expect(find.text('Welcome!'), findsNothing);
+    expect(jsonDecode(store.m['aethryon.drive.settings']!)['welcomeDone'], true);
+  });
+
+  testWidgets('welcome completion does not erase other saved preferences (and vice versa)', (t) async {
+    final store = SeededStore({'aethryon.drive.settings': jsonEncode({'experimental': true})});
+    await t.pumpWidget(app(store: store));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Get Started'));
+    await t.pumpAndSettle();
+    final saved = jsonDecode(store.m['aethryon.drive.settings']!) as Map<String, dynamic>;
+    expect(saved['welcomeDone'], true);
+    expect(saved['experimental'], true);
+  });
+
+  testWidgets('about: credits and dynamic version; both actions open the configured urls', (t) async {
+    final o = RecordingOpener();
+    await t.pumpWidget(app(opener: o));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Settings'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('About'));
+    await t.pumpAndSettle();
+    expect(find.text('DEVELOPED BY'), findsOneWidget);
+    expect(find.text('Aethryon Labs'), findsWidgets);
+    expect(find.text('DEVELOPER'), findsOneWidget);
+    expect(find.text('Md. Shakil Hossain'), findsOneWidget);
+    expect(find.text('Version 1.2.3 (45)'), findsOneWidget);
+    await t.tap(find.byKey(const Key('about_get_in_touch')));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('about_support')));
+    await t.pumpAndSettle();
+    expect(o.opened.map((u) => u.toString()), [defaultLinks.getInTouchUrl, defaultLinks.supportUrl]);
+  });
+
+  testWidgets('the separate Support button (Files toolbar) opens the same support url and does not overlap the title', (t) async {
+    final o = RecordingOpener();
+    await t.pumpWidget(app(opener: o));
+    await t.pumpAndSettle();
+    final support = t.getRect(find.byKey(const Key('support_button')));
+    final title = t.getRect(find.text('Aethryon Drive'));
+    final bar = t.getRect(find.byType(AppBar));
+    expect(support.overlaps(title), isFalse);
+    expect(bar.contains(support.topLeft) && bar.contains(support.bottomRight), isTrue);
+    await t.tap(find.byKey(const Key('support_button')));
+    await t.pumpAndSettle();
+    expect(o.opened.single.toString(), defaultLinks.supportUrl);
+  });
+
+  testWidgets('settings offers Send feedback', (t) async {
+    await t.pumpWidget(app());
+    await t.pumpAndSettle();
+    await t.tap(find.text('Settings'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Send feedback'));
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('message')), findsOneWidget);
+    expect(find.byKey(const Key('category')), findsOneWidget);
   });
 }

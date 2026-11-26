@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:aethryon_auth/aethryon_auth.dart';
+import 'package:aethryon_brand/aethryon_brand.dart';
 import 'package:aethryon_capability/aethryon_capability.dart';
 import 'package:aethryon_design/aethryon_design.dart';
 import 'package:aethryon_host_flutter/aethryon_host_flutter.dart';
@@ -22,13 +23,27 @@ void main() {
   StartupTimer.install();
   final store = FlutterSecureStore();
   final files = FlutterFilePlatform();
+  final opener = FlutterUrlOpener();
+  final client = http.Client();
+  final brand = BrandServices.create(
+    store: store,
+    opener: opener,
+    httpClient: client,
+    info: FlutterAppInfo(),
+    linksCacheKey: 'aethryon.drive.links',
+    // Set with --dart-define (CI reads the repository variable AUS_BASE_URL). Empty = defaults/cache only.
+    ausBaseUrl: const String.fromEnvironment('AUS_BASE_URL'),
+    appId: const String.fromEnvironment('AUS_APP_ID', defaultValue: 'com.aethryon.drive_app'),
+  );
+  unawaited(brand.start()); // background; never blocks the UI
   runApp(DriveApp(
     services: DriveServices(
       secureStore: store,
       files: files,
-      opener: FlutterUrlOpener(),
-      httpClient: http.Client(),
+      opener: opener,
+      httpClient: client,
       openDb: () => openProductionDb(store, files),
+      brand: brand,
     ),
   ));
 }
@@ -61,6 +76,7 @@ class _ShellState extends State<Shell> {
   List<AccountRecord> _recs = [];
   String _selected = demoAccount;
   bool _experimental = false;
+  Map<String, Object?> _prefsMap = {};
   DriveDb _db = const DriveDb();
 
   @override
@@ -75,10 +91,22 @@ class _ShellState extends State<Shell> {
     final r = await _accounts.list();
     if (!mounted) return;
     setState(() {
+      _prefsMap = Map.of(s);
       _experimental = s['experimental'] == true;
       _db = db;
       _recs = r;
     });
+    if (s['welcomeDone'] != true) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _welcome());
+    }
+  }
+
+  /// First launch only: shown once, completion persisted with the other preferences.
+  Future<void> _welcome() async {
+    if (!mounted) return;
+    await showWelcomeDialog(context, widget.services.brand);
+    _prefsMap['welcomeDone'] = true;
+    await _prefs.save(_prefsMap);
   }
 
   Future<void> _reload() async {
@@ -106,6 +134,7 @@ class _ShellState extends State<Shell> {
         store: _selected == demoAccount ? null : _db.store,
         controller: widget.services.transfers,
         files: widget.services.files,
+        brand: widget.services.brand,
       ),
       TransfersScreen(controller: widget.services.transfers),
       SearchScreen(store: _db.store, labelFor: _labelFor),
@@ -127,9 +156,11 @@ class _ShellState extends State<Shell> {
       SettingsScreen(
         experimental: _experimental,
         db: _db,
+        brand: widget.services.brand,
         onExperimental: (v) async {
           setState(() => _experimental = v);
-          await _prefs.save({'experimental': v});
+          _prefsMap['experimental'] = v;
+          await _prefs.save(_prefsMap);
         },
       ),
     ];
@@ -182,6 +213,7 @@ class FilesScreen extends StatefulWidget {
   final DriveStore? store;
   final TransferController controller;
   final FilePlatform files;
+  final BrandServices brand;
   const FilesScreen({
     super.key,
     required this.adapter,
@@ -191,6 +223,7 @@ class FilesScreen extends StatefulWidget {
     required this.store,
     required this.controller,
     required this.files,
+    required this.brand,
   });
   @override
   State<FilesScreen> createState() => _FilesScreenState();
@@ -302,6 +335,7 @@ class _FilesScreenState extends State<FilesScreen> {
                 tooltip: 'Up one folder',
                 onPressed: () => _go(context, _nav.pop()),
               ),
+        actions: [SupportButton(services: widget.brand)],
       ),
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.upload_file),
@@ -484,7 +518,8 @@ class SettingsScreen extends StatelessWidget {
   final bool experimental;
   final DriveDb db;
   final ValueChanged<bool> onExperimental;
-  const SettingsScreen({super.key, required this.experimental, required this.db, required this.onExperimental});
+  final BrandServices brand;
+  const SettingsScreen({super.key, required this.experimental, required this.db, required this.onExperimental, required this.brand});
 
   @override
   Widget build(BuildContext context) {
@@ -493,6 +528,16 @@ class SettingsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(padding: const EdgeInsets.all(Space.m), children: [
+        ListTile(
+          leading: const Icon(Icons.info_outline),
+          title: const Text('About'),
+          onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => AboutScreen(services: brand))),
+        ),
+        ListTile(
+          leading: const Icon(Icons.feedback_outlined),
+          title: const Text('Send feedback'),
+          onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => FeedbackScreen(services: brand))),
+        ),
         SwitchListTile(
           key: const Key('experimental'),
           title: const Text('Show experimental providers'),

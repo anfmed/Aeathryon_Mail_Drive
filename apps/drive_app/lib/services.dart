@@ -1,3 +1,4 @@
+import 'package:aethryon_brand/aethryon_brand.dart';
 import 'package:aethryon_platform/aethryon_platform.dart';
 import 'package:aethryon_store/aethryon_store.dart';
 import 'package:drive_core/drive_core.dart';
@@ -18,6 +19,7 @@ class DriveServices {
   final UrlOpener opener;
   final http.Client httpClient;
   final Future<DriveDb> Function() openDb;
+  final BrandServices brand;
   late final TransferController transfers = TransferController(files, explain: explainError);
   DriveServices({
     required this.secureStore,
@@ -25,6 +27,7 @@ class DriveServices {
     required this.opener,
     required this.httpClient,
     required this.openDb,
+    required this.brand,
   });
 }
 

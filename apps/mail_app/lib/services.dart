@@ -1,3 +1,4 @@
+import 'package:aethryon_brand/aethryon_brand.dart';
 import 'package:aethryon_platform/aethryon_platform.dart';
 import 'package:aethryon_store/aethryon_store.dart';
 import 'package:http/http.dart' as http;
@@ -15,12 +16,14 @@ class MailServices {
   final UrlOpener opener;
   final http.Client httpClient;
   final Future<MailDb> Function() openDb;
+  final BrandServices brand;
   const MailServices({
     required this.secureStore,
     required this.files,
     required this.opener,
     required this.httpClient,
     required this.openDb,
+    required this.brand,
   });
 }
 

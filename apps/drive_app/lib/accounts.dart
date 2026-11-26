@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:aethryon_auth/aethryon_auth.dart';
 import 'package:aethryon_design/aethryon_design.dart';
+import 'package:aethryon_store/aethryon_store.dart' show DriveStore;
 import 'package:drive_core/drive_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

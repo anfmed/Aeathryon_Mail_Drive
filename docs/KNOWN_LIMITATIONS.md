@@ -17,3 +17,11 @@
 11. **Release:** Windows সাইন নেই; Linux শুধু tar.gz; Play-এর জন্য AAB নেই; আইকন নেই; Privacy Policy খসড়া (আইনি পর্যালোচনা ও ইমেইল বাকি)।
 12. নিরাপত্তা-নিরীক্ষা ও accessibility: কেবল self-review + স্বয়ংক্রিয় tap-target পরীক্ষা (`SECURITY_REVIEW_PHASE9.md`)।
 13. Apple (iOS/macOS) সম্পূর্ণ বাদ।
+
+## Welcome / About / Support / Feedback (v6)
+14. **AUS-সংযোগ আংশিক:** link-সেবা `GET {AUS_BASE_URL}/v1/links` ডাকে, কিন্তু (ক) **AUS base URL এই প্রকল্পে কনফিগার করা নেই** — GitHub Variable `AUS_BASE_URL` বসাতে হবে; (খ) **AUS-এর আসল response-আকার আমার অজানা** (অনুমানভিত্তিক সহনশীল parser); (গ) কোনো আসল AUS-এর বিরুদ্ধে পরীক্ষা হয়নি; (ঘ) এই প্রকল্পে AUS-এর কোনো বিদ্যমান client ছিল না, তাই নতুন integration-point বানানো হয়েছে। Feedback-ও আসল endpoint-এ পরীক্ষিত নয়।
+15. **Logo:** ফাইলটি ছোট করা (৬৪০px); আরও বড় পর্দায় (উচ্চ-DPI desktop-এ ১২৮dp+) সামান্য নরম দেখাতে পারে — দরকার হলে আসল মাপ ব্যবহার করব।
+16. Welcome-flag secure-store-এ থাকে (বিদ্যমান preference-পথ)। Android-এ uninstall করলে মুছে যায় (backup বন্ধ)।
+17. Support বোতাম Files ও Inbox-এর toolbar-এ; অন্য ট্যাবে (Transfers, Search, Accounts, Settings) নেই — Settings → About-এ Support আছে।
+18. `flutter test`-এ `assets` লোড হয় কি না (logo) ও Support-বোতামের ৪৮dp-নির্দেশিকা — **কখনো চালানো হয়নি**।
+19. সর্বশেষ আসল CI-রানে **`aethryon_store` টেস্ট-ফাইল লোড হয়নি** (`loading test/store_test.dart (failed)`, ত্রুটি-বার্তা পেস্টে ছিল না; `dart analyze` পরিষ্কার ছিল)। সন্দেহ: `sqlite3` build-hook। এখন `-r expanded` রিপোর্টার চালু — পরের রানের লগ লাগবে।

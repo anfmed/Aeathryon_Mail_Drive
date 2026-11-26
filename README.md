@@ -1,4 +1,4 @@
-# Aethryon — Phase 1–9 repository
+# Aethryon — repository (Phase 1–9 + Welcome/About/Support/Feedback)
 দুটি স্বতন্ত্র অ্যাপ (Aethryon Drive, Aethryon Mail) + shared foundation। Web নয়।
 **অবস্থা: লেখা হয়েছে; CI-তে এখনো সবুজ প্রমাণিত নয়।** → `docs/KNOWN_LIMITATIONS.md` · **বাকি phase: `docs/ROADMAP_REMAINING.md`**
 **আপনার করণীয় তালিকা: `docs/USER_ACTION_CHECKLIST.md`**

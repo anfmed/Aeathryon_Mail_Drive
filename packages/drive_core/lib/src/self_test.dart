@@ -40,10 +40,11 @@ Future<List<SelfTestStep>> runAdapterSelfTest(StorageAdapter a, String accountId
     return l.items.firstWhere((n) => n.name == folderName && n.isFolder).id;
   });
 
-  if (folderId != null) {
-    final up = await step<RemoteNode>('upload 2 KB file', () => a.upload(accountId, folderId!, 'a.bin', Stream.value(data), data.length));
+  final fid = folderId;
+  if (fid != null) {
+    final up = await step<RemoteNode>('upload 2 KB file', () => a.upload(accountId, fid, 'a.bin', Stream.value(data), data.length));
     await step<void>('list shows the file with the right size', () async {
-      final l = await a.listChildren(accountId, folderId!);
+      final l = await a.listChildren(accountId, fid);
       final f = l.items.firstWhere((n) => n.name == 'a.bin');
       if (f.size != data.length) throw StateError('size mismatch');
     });
@@ -57,13 +58,13 @@ Future<List<SelfTestStep>> runAdapterSelfTest(StorageAdapter a, String accountId
         if (!_same(got, data.sublist(100, 200))) throw StateError('range mismatch');
       }, optional: true);
       await step<void>('rename/move', () async {
-        await a.move(accountId, up.id, folderId!, 'b.bin');
-        final l = await a.listChildren(accountId, folderId);
+        await a.move(accountId, up.id, fid, 'b.bin');
+        final l = await a.listChildren(accountId, fid);
         if (!l.items.any((n) => n.name == 'b.bin')) throw StateError('not renamed');
       });
     }
     await step<void>('quota', () async => a.quota(accountId), optional: true);
-    await step<void>('clean up (delete the test folder)', () => a.permanentDelete(accountId, folderId!));
+    await step<void>('clean up (delete the test folder)', () => a.permanentDelete(accountId, fid));
   }
   return steps;
 }

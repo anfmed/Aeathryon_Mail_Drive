@@ -2,9 +2,9 @@
 # analyze + test every pure-Dart package; keeps going after a failure and lists ALL failures at the end.
 set -uo pipefail
 failed=()
-for p in aethryon_capability aethryon_net aethryon_log aethryon_platform aethryon_auth drive_core mail_core mail_imap aethryon_store; do
+for p in aethryon_capability aethryon_net aethryon_log aethryon_platform aethryon_auth drive_core mail_core mail_imap aethryon_store aethryon_brand_core; do
   echo "=== $p ==="
-  ( cd "packages/$p" && dart pub get && dart analyze && { [ ! -d test ] || dart test; } ) || failed+=("$p")
+  ( cd "packages/$p" && dart pub get && dart analyze && { [ ! -d test ] || dart test -r expanded; } ) || failed+=("$p")
 done
 if [ ${#failed[@]} -gt 0 ]; then
   echo "::error::FAILED PACKAGES: ${failed[*]}"

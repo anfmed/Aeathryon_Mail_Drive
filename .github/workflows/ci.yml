@@ -115,7 +115,8 @@ jobs:
         working-directory: apps/${{ matrix.app }}
         run: |
           flutter pub get
-          ${{ matrix.cmd }} --build-number=${{ github.run_number }}
+          # AUS_BASE_URL = repository VARIABLE (Settings > Secrets and variables > Actions > Variables); empty = defaults/cache only
+          ${{ matrix.cmd }} --build-number=${{ github.run_number }} --dart-define=AUS_BASE_URL=${{ vars.AUS_BASE_URL }} --dart-define=AUS_APP_ID=com.aethryon.${{ matrix.app }}
       - name: Sign APKs (only when keystore secrets exist)
         if: matrix.target == 'android'
         shell: bash

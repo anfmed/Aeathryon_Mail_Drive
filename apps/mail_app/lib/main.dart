@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:aethryon_auth/aethryon_auth.dart';
+import 'package:aethryon_brand/aethryon_brand.dart';
 import 'package:aethryon_capability/aethryon_capability.dart';
 import 'package:aethryon_design/aethryon_design.dart';
 import 'package:aethryon_host_flutter/aethryon_host_flutter.dart';
@@ -19,13 +22,27 @@ void main() {
   StartupTimer.install();
   final store = FlutterSecureStore();
   final files = FlutterFilePlatform();
+  final opener = FlutterUrlOpener();
+  final client = http.Client();
+  final brand = BrandServices.create(
+    store: store,
+    opener: opener,
+    httpClient: client,
+    info: FlutterAppInfo(),
+    linksCacheKey: 'aethryon.mail.links',
+    // Set with --dart-define (CI reads the repository variable AUS_BASE_URL). Empty = defaults/cache only.
+    ausBaseUrl: const String.fromEnvironment('AUS_BASE_URL'),
+    appId: const String.fromEnvironment('AUS_APP_ID', defaultValue: 'com.aethryon.mail_app'),
+  );
+  unawaited(brand.start()); // background; never blocks the UI
   runApp(MailApp(
     services: MailServices(
       secureStore: store,
       files: files,
-      opener: FlutterUrlOpener(),
-      httpClient: http.Client(),
+      opener: opener,
+      httpClient: client,
       openDb: () => openProductionDb(store, files),
+      brand: brand,
     ),
   ));
 }
@@ -59,6 +76,7 @@ class _ShellState extends State<Shell> {
   List<AccountRecord> _recs = [];
   String _selected = demoAccount;
   int _autoRefreshMinutes = 0;
+  Map<String, Object?> _prefsMap = {};
   MailDb _db = const MailDb();
 
   @override
@@ -73,11 +91,23 @@ class _ShellState extends State<Shell> {
     final r = await _accounts.list();
     if (!mounted) return;
     setState(() {
+      _prefsMap = Map.of(s);
       _autoRefreshMinutes = (s['autoRefreshMinutes'] as int?) ?? 0;
       _db = db;
       _recs = r;
       _ready = true;
     });
+    if (s['welcomeDone'] != true) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _welcome());
+    }
+  }
+
+  /// First launch only: shown once, completion persisted with the other preferences.
+  Future<void> _welcome() async {
+    if (!mounted) return;
+    await showWelcomeDialog(context, widget.services.brand);
+    _prefsMap['welcomeDone'] = true;
+    await _prefs.save(_prefsMap);
   }
 
   Future<void> _reload() async {
@@ -99,6 +129,7 @@ class _ShellState extends State<Shell> {
         accountId: _selected,
         session: session,
         autoRefreshMinutes: _autoRefreshMinutes,
+        brand: widget.services.brand,
       ),
       AccountsScreen(
         accounts: _accounts,
@@ -117,9 +148,11 @@ class _ShellState extends State<Shell> {
       SettingsScreen(
         autoRefreshMinutes: _autoRefreshMinutes,
         db: _db,
+        brand: widget.services.brand,
         onAutoRefresh: (m) async {
           setState(() => _autoRefreshMinutes = m);
-          await _prefs.save({'autoRefreshMinutes': m});
+          _prefsMap['autoRefreshMinutes'] = m;
+          await _prefs.save(_prefsMap);
         },
       ),
     ];
@@ -172,7 +205,8 @@ class InboxScreen extends StatefulWidget {
   final String accountId;
   final MailSession session;
   final int autoRefreshMinutes;
-  const InboxScreen({super.key, required this.accountId, required this.session, required this.autoRefreshMinutes});
+  final BrandServices brand;
+  const InboxScreen({super.key, required this.accountId, required this.session, required this.autoRefreshMinutes, required this.brand});
   @override
   State<InboxScreen> createState() => _InboxScreenState();
 }
@@ -244,6 +278,7 @@ class _InboxScreenState extends State<InboxScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Aethryon Mail'), actions: [
+        SupportButton(services: widget.brand),
         IconButton(icon: const Icon(Icons.refresh), tooltip: 'Check for new mail', onPressed: _refresh),
       ]),
       floatingActionButton: FloatingActionButton.extended(
@@ -413,13 +448,24 @@ class SettingsScreen extends StatelessWidget {
   final int autoRefreshMinutes;
   final MailDb db;
   final ValueChanged<int> onAutoRefresh;
-  const SettingsScreen({super.key, required this.autoRefreshMinutes, required this.db, required this.onAutoRefresh});
+  final BrandServices brand;
+  const SettingsScreen({super.key, required this.autoRefreshMinutes, required this.db, required this.onAutoRefresh, required this.brand});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(padding: const EdgeInsets.all(Space.m), children: [
+        ListTile(
+          leading: const Icon(Icons.info_outline),
+          title: const Text('About'),
+          onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => AboutScreen(services: brand))),
+        ),
+        ListTile(
+          leading: const Icon(Icons.feedback_outlined),
+          title: const Text('Send feedback'),
+          onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => FeedbackScreen(services: brand))),
+        ),
         ListTile(
           title: const Text('Check for new mail automatically'),
           subtitle: const Text('Only while the app is open. There is no background service (saves battery).'),

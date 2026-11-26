@@ -8,6 +8,7 @@ dependencies:
   flutter: {sdk: flutter}
   http: any
   aethryon_auth: {path: ../../packages/aethryon_auth}
+  aethryon_brand: {path: ../../packages/aethryon_brand}
   aethryon_capability: {path: ../../packages/aethryon_capability}
   aethryon_design: {path: ../../packages/aethryon_design}
   aethryon_host_flutter: {path: ../../packages/aethryon_host_flutter}

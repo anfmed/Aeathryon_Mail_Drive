@@ -9,3 +9,4 @@
 - file_selector
 - path_provider
 - url_launcher
+- package_info_plus
