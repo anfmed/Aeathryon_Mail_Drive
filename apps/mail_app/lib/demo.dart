@@ -4,16 +4,44 @@ const demoAccount = 'demo';
 
 MemoryMailTransport buildDemoTransport() {
   final t = MemoryMailTransport(capabilities: 'IMAP4rev1 IDLE MOVE CONDSTORE');
-  t.addFolder('INBOX', uidValidity: 1, messages: [
-    HeaderInfo(uid: 1, messageId: '<w@demo>', subject: 'Welcome', dateUtc: DateTime.utc(2026, 11, 1)),
-    HeaderInfo(uid: 2, messageId: '<l@demo>', subject: 'Lunch?', dateUtc: DateTime.utc(2026, 11, 2)),
-    HeaderInfo(uid: 3, messageId: '<r@demo>', inReplyTo: '<l@demo>', references: ['<l@demo>'],
-        subject: 'Re: Lunch?', dateUtc: DateTime.utc(2026, 11, 3)),
-  ]);
-  t.setBody('INBOX', 1,
-      html: '<p>Welcome to <b>Aethryon Mail</b>.</p><p>Remote images are never loaded.</p>'
-          '<img src="http://tracker.example/p.gif"><script>alert(1)</script>');
-  t.setBody('INBOX', 2, html: '<div>Lunch tomorrow? &amp; bring the report.</div>');
+  t.addFolder(
+    'INBOX',
+    uidValidity: 1,
+    messages: [
+      HeaderInfo(
+        uid: 1,
+        messageId: '<w@demo>',
+        subject: 'Welcome',
+        dateUtc: DateTime.utc(2026, 11, 1),
+      ),
+      HeaderInfo(
+        uid: 2,
+        messageId: '<l@demo>',
+        subject: 'Lunch?',
+        dateUtc: DateTime.utc(2026, 11, 2),
+      ),
+      HeaderInfo(
+        uid: 3,
+        messageId: '<r@demo>',
+        inReplyTo: '<l@demo>',
+        references: ['<l@demo>'],
+        subject: 'Re: Lunch?',
+        dateUtc: DateTime.utc(2026, 11, 3),
+      ),
+    ],
+  );
+  t.setBody(
+    'INBOX',
+    1,
+    html:
+        '<p>Welcome to <b>Aethryon Mail</b>.</p><p>Remote images are never loaded.</p>'
+        '<img src="http://tracker.example/p.gif"><script>alert(1)</script>',
+  );
+  t.setBody(
+    'INBOX',
+    2,
+    html: '<div>Lunch tomorrow? &amp; bring the report.</div>',
+  );
   t.setBody('INBOX', 3, html: '<p>Re: Lunch &mdash; sounds good.</p>');
   return t;
 }

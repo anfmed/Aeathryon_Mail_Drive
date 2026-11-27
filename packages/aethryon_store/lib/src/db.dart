@@ -1,6 +1,8 @@
 import 'dart:io';
+
 import 'package:aethryon_platform/aethryon_platform.dart';
 import 'package:sqlite3/sqlite3.dart';
+
 import 'key_manager.dart';
 import 'sql.dart';
 
@@ -28,17 +30,22 @@ Database openDatabase(
   required String schema,
   bool allowUnencrypted = false,
 }) {
-  if (!RegExp(r'^[0-9a-f]{64}$').hasMatch(hexKey)) throw ArgumentError('key must be 64 hex chars');
+  if (!RegExp(r'^[0-9a-f]{64}$').hasMatch(hexKey))
+    throw ArgumentError('key must be 64 hex chars');
   final db = sqlite3.open(path);
   try {
     if (!allowUnencrypted) {
       db.execute("PRAGMA key = '$hexKey';");
       if (!cipherActive(db)) {
-        throw EncryptionUnavailable('This build has no database encryption; nothing will be saved to disk.');
+        throw EncryptionUnavailable(
+          'This build has no database encryption; nothing will be saved to disk.',
+        );
       }
     }
     db.execute('PRAGMA foreign_keys = ON;');
-    final has = db.select("SELECT 1 FROM sqlite_master WHERE type='table' AND name='schema_meta'");
+    final has = db.select(
+      "SELECT 1 FROM sqlite_master WHERE type='table' AND name='schema_meta'",
+    );
     if (has.isEmpty) {
       for (final st in splitSql(schema)) {
         db.execute(st);
@@ -67,7 +74,14 @@ Future<DbOpenResult> openAppDatabase({
 }) async {
   final key = await DbKeyManager(store, namespace).getOrCreate();
   try {
-    return DbOpenResult(db: openDatabase(path, hexKey: key, schema: schema, allowUnencrypted: allowUnencrypted));
+    return DbOpenResult(
+      db: openDatabase(
+        path,
+        hexKey: key,
+        schema: schema,
+        allowUnencrypted: allowUnencrypted,
+      ),
+    );
   } on EncryptionUnavailable catch (e) {
     return DbOpenResult(problem: e.message);
   } on SqliteException {
@@ -78,7 +92,14 @@ Future<DbOpenResult> openAppDatabase({
         if (f.existsSync()) f.deleteSync();
       }
       return DbOpenResult(
-          db: openDatabase(path, hexKey: key, schema: schema, allowUnencrypted: allowUnencrypted), recreated: true);
+        db: openDatabase(
+          path,
+          hexKey: key,
+          schema: schema,
+          allowUnencrypted: allowUnencrypted,
+        ),
+        recreated: true,
+      );
     } catch (_) {
       return const DbOpenResult(problem: 'Could not open the local database.');
     }

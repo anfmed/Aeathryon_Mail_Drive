@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:aethryon_platform/aethryon_platform.dart';
+
 import 'resumable.dart';
 
 /// Remote names are untrusted input: never let them escape the download folder.
@@ -9,7 +11,19 @@ String sanitizeFileName(String name) {
   s = s.replaceAll(RegExp(r'^\.+'), '_').replaceAll(RegExp(r'[. ]+$'), '');
   if (s.isEmpty) s = 'file';
   final stem = s.split('.').first.toUpperCase();
-  const reserved = {'CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'LPT1', 'LPT2', 'LPT3'};
+  const reserved = {
+    'CON',
+    'PRN',
+    'AUX',
+    'NUL',
+    'COM1',
+    'COM2',
+    'COM3',
+    'COM4',
+    'LPT1',
+    'LPT2',
+    'LPT3',
+  };
   if (reserved.contains(stem)) s = '_$s';
   if (s.length > 120) {
     final dot = s.lastIndexOf('.');

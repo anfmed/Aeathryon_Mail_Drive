@@ -26,28 +26,44 @@ class Capability {
       throw ArgumentError('FULL requires at least one primary source id');
     }
     return Capability._(
-        CapabilityStatus.full, Evidence.primary, List.unmodifiable(sources), note);
+      CapabilityStatus.full,
+      Evidence.primary,
+      List.unmodifiable(sources),
+      note,
+    );
   }
 
-  const Capability.partial(
-      {Evidence evidence = Evidence.secondary,
-      List<String> sources = const [],
-      String? note})
-      : this._(CapabilityStatus.partial, evidence, sources, note);
+  const Capability.partial({
+    Evidence evidence = Evidence.secondary,
+    List<String> sources = const [],
+    String? note,
+  }) : this._(CapabilityStatus.partial, evidence, sources, note);
 
   const Capability.unsupported({List<String> sources = const [], String? note})
-      : this._(CapabilityStatus.unsupported, Evidence.primary, sources, note);
+    : this._(CapabilityStatus.unsupported, Evidence.primary, sources, note);
 
-  const Capability.requiresPermission(
-      {List<String> sources = const [], String? note})
-      : this._(CapabilityStatus.requiresPermission, Evidence.primary, sources, note);
+  const Capability.requiresPermission({
+    List<String> sources = const [],
+    String? note,
+  }) : this._(
+         CapabilityStatus.requiresPermission,
+         Evidence.primary,
+         sources,
+         note,
+       );
 
-  const Capability.requiresCompanion(
-      {List<String> sources = const [], String? note})
-      : this._(CapabilityStatus.requiresCompanion, Evidence.primary, sources, note);
+  const Capability.requiresCompanion({
+    List<String> sources = const [],
+    String? note,
+  }) : this._(
+         CapabilityStatus.requiresCompanion,
+         Evidence.primary,
+         sources,
+         note,
+       );
 
   const Capability.unverified({String? note})
-      : this._(CapabilityStatus.unverified, Evidence.none, const [], note);
+    : this._(CapabilityStatus.unverified, Evidence.none, const [], note);
 
   /// UI may enable the action. UNVERIFIED / UNSUPPORTED / REQUIRES_* never do.
   bool get enabledInUi =>
@@ -58,8 +74,11 @@ class CapabilityRegistry {
   final Map<String, Map<String, Capability>> _byProvider = {};
   final Map<String, Capability> _overall = {};
 
-  void register(String provider, Map<String, Capability> features,
-      {required Capability overall}) {
+  void register(
+    String provider,
+    Map<String, Capability> features, {
+    required Capability overall,
+  }) {
     _byProvider[provider] = Map.of(features);
     _overall[provider] = overall;
   }
