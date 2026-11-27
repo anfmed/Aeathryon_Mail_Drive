@@ -37,18 +37,8 @@ abstract class MailTransport {
   Future<String> capabilityLine();
   Future<List<FolderInfo>> listFolders();
   Future<FolderInfo> select(String path);
-  Future<List<HeaderInfo>> fetchHeaders(
-    String path, {
-    required int fromUid,
-    int? limit,
-  });
-  Future<void> setFlags(
-    String path,
-    List<int> uids, {
-    Set<String> add = const {},
-    Set<String> remove = const {},
-  });
-
+  Future<List<HeaderInfo>> fetchHeaders(String path, {required int fromUid, int? limit});
+  Future<void> setFlags(String path, List<int> uids, {Set<String> add = const {}, Set<String> remove = const {}});
   /// Full body of one message (never cached to disk by the app: memory only).
   Future<MessageBody> fetchBody(String path, int uid);
 
@@ -57,10 +47,7 @@ abstract class MailTransport {
 
   /// Flags of all messages, or only those changed since [changedSinceModSeq]
   /// when the server supports CONDSTORE (the transport may return all).
-  Future<Map<int, Set<String>>> fetchFlags(
-    String path, {
-    int? changedSinceModSeq,
-  });
+  Future<Map<int, Set<String>>> fetchFlags(String path, {int? changedSinceModSeq});
 
   Future<void> sendPlain({
     required String fromName,

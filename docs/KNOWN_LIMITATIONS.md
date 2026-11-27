@@ -25,3 +25,5 @@
 17. Support বোতাম Files ও Inbox-এর toolbar-এ; অন্য ট্যাবে (Transfers, Search, Accounts, Settings) নেই — Settings → About-এ Support আছে।
 18. `flutter test`-এ `assets` লোড হয় কি না (logo) ও Support-বোতামের ৪৮dp-নির্দেশিকা — **কখনো চালানো হয়নি**।
 19. সর্বশেষ আসল CI-রানে **`aethryon_store` টেস্ট-ফাইল লোড হয়নি** (`loading test/store_test.dart (failed)`, ত্রুটি-বার্তা পেস্টে ছিল না; `dart analyze` পরিষ্কার ছিল)। সন্দেহ: `sqlite3` build-hook। এখন `-r expanded` রিপোর্টার চালু — পরের রানের লগ লাগবে।
+20. **v6-এ `git pull -X ours` দিয়ে merge করায় দুই অ্যাপের `main.dart` ভেঙেছিল** (`Expected to find ')'`) — আমার সংস্করণ সিনট্যাক্সে ঠিক ছিল, কিন্তু `format`-এর commit-এর সঙ্গে মিশে গিয়েছিল। এখন নিয়ম: আগে `pull`, তারপর ZIP overwrite (`USER_ACTION_CHECKLIST.md` §০)।
+21. `SupportButton` প্রথমে ৪০dp উঁচু ছিল (compact density) ও accessibility tap-target (৪৮dp) টেস্টে আসল CI-তে ব্যর্থ হয়েছিল; v7-এ ৪৮dp।

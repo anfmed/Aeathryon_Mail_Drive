@@ -1,5 +1,4 @@
 import 'package:aethryon_capability/aethryon_capability.dart';
-
 import 'models.dart';
 
 /// Feature keys used in the capability registry (stable identifiers).
@@ -24,36 +23,19 @@ abstract class StorageAdapter {
   String get providerId;
   Capability capability(String feature);
 
-  Future<Page<RemoteNode>> listChildren(
-    String accountId,
-    String parentId, {
-    String? cursor,
-  });
+  Future<Page<RemoteNode>> listChildren(String accountId, String parentId,
+      {String? cursor});
   Future<RemoteNode> metadata(String accountId, String id);
 
   /// Streams bytes; [start]/[endInclusive] only if rangeDownload is enabled.
-  Stream<List<int>> download(
-    String accountId,
-    String id, {
-    int? start,
-    int? endInclusive,
-  });
+  Stream<List<int>> download(String accountId, String id,
+      {int? start, int? endInclusive});
 
-  Future<RemoteNode> upload(
-    String accountId,
-    String parentId,
-    String name,
-    Stream<List<int>> data,
-    int length,
-  );
+  Future<RemoteNode> upload(String accountId, String parentId, String name,
+      Stream<List<int>> data, int length);
 
   Future<void> mkdir(String accountId, String parentId, String name);
-  Future<void> move(
-    String accountId,
-    String id,
-    String newParentId,
-    String newName,
-  );
+  Future<void> move(String accountId, String id, String newParentId, String newName);
 
   /// Recoverable delete. Adapters that cannot trash MUST throw
   /// [UnsupportedOperation]; callers must not fall back to permanent delete

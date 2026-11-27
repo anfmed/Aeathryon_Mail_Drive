@@ -30,14 +30,6 @@ class MailServices {
 Future<MailDb> openProductionDb(SecureStore store, FilePlatform files) async {
   final dir = await files.appDataDir();
   final r = await openAppDatabase(
-    store: store,
-    namespace: 'aethryon.mail',
-    path: '$dir/mail.db',
-    schema: mailSchemaV1,
-  );
-  return MailDb(
-    store: r.db == null ? null : SqliteMailStore(r.db!),
-    problem: r.problem,
-    recreated: r.recreated,
-  );
+      store: store, namespace: 'aethryon.mail', path: '$dir/mail.db', schema: mailSchemaV1);
+  return MailDb(store: r.db == null ? null : SqliteMailStore(r.db!), problem: r.problem, recreated: r.recreated);
 }

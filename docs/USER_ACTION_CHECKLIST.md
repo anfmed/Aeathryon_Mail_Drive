@@ -1,5 +1,23 @@
 # USER_ACTION_CHECKLIST — আপনাকে যা যা করতে হবে (ক্রমানুসারে)
 
+## 0. ⚠ নতুন ZIP বসানোর নিরাপদ নিয়ম (merge কখনো লাগবে না)
+`format` workflow প্রতি push-এর পর নিজে একটি commit পাঠায়। তাই **ক্রম গুরুত্বপূর্ণ** — আগে `pull`, তারপর ZIP-এর ফাইল বসানো:
+```
+git pull                      # ১) আগে সবচেয়ে নতুন অবস্থা নিন (কোনো বদল তখনো করেননি, তাই conflict অসম্ভব)
+# ২) ZIP থেকে ফাইলগুলো repo-র ফোল্ডারে কপি করে overwrite করুন
+git add -A
+git commit -m "v7"
+git push                      # ৩) কোনো "rejected" এলে নিচের "যদি rejected আসে" দেখুন
+```
+**যদি `rejected (fetch first)` আসে** (মানে আপনি কাজ করার সময় `format` নতুন commit পাঠিয়েছিল): merge করবেন না — নিজের বদলগুলো ZIP থেকে আবার বসান:
+```
+git reset --hard origin/main  # ⚠ আপনার স্থানীয় অ-push বদল মুছে যায় (ZIP-এ সবই আছে)
+git pull
+# ZIP থেকে আবার overwrite → git add -A → git commit -m "v7" → git push
+```
+**`git pull -X ours` আর কখনো নয়** — এটি `format`-এর বদল ও আমার বদল মিশিয়ে ভাঙা কোড বানিয়েছিল (v6-এ `main.dart` ভেঙেছে এভাবেই)।
+**আজকের ভাঙা অবস্থা ঠিক করতে:** উপরের "rejected" নিয়মই (reset → pull → ZIP v7 overwrite → commit → push)।
+
 ## A. এখনই (বাধ্যতামূলক, বিনামূল্যে)
 এখন মাত্র **২টি workflow**: `format` (নিজে চলে) ও `ci` (আপনি হাতে চালান)।
 1. ☐ GitHub-এ **public** repository (ADR-010)।

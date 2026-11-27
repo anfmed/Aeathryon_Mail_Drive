@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:drive_core/drive_core.dart';
 import 'package:test/test.dart';
 
@@ -29,40 +28,29 @@ void main() {
     expect(uniqueFile(dir.path, '../a.txt').path.startsWith(dir.path), isTrue);
   });
 
-  test(
-    'FileSink appends, reports length, truncates; FileSource reads ranges',
-    () async {
-      final f = File('${dir.path}/d.bin');
-      final sink = FileSink(f);
-      expect(await sink.length(), 0);
-      await sink.append([1, 2, 3]);
-      await sink.append([4, 5]);
-      expect(await sink.length(), 5);
-      await sink.truncate();
-      expect(await sink.length(), 0);
-      await sink.append([9, 8, 7, 6]);
-      await sink.close();
-      expect(f.readAsBytesSync(), [9, 8, 7, 6]);
-      final src = FileSource(f);
-      expect(await src.length(), 4);
-      expect(await src.read(1, 2), [8, 7]);
-    },
-  );
+  test('FileSink appends, reports length, truncates; FileSource reads ranges', () async {
+    final f = File('${dir.path}/d.bin');
+    final sink = FileSink(f);
+    expect(await sink.length(), 0);
+    await sink.append([1, 2, 3]);
+    await sink.append([4, 5]);
+    expect(await sink.length(), 5);
+    await sink.truncate();
+    expect(await sink.length(), 0);
+    await sink.append([9, 8, 7, 6]);
+    await sink.close();
+    expect(f.readAsBytesSync(), [9, 8, 7, 6]);
+    final src = FileSource(f);
+    expect(await src.length(), 4);
+    expect(await src.read(1, 2), [8, 7]);
+  });
 
   test('TransferRunner downloads into a real file and resumes', () async {
-    final a = MemoryStorageAdapter()
-      ..seedFile('x', '/f.bin', [1, 2, 3, 4, 5, 6]);
+    final a = MemoryStorageAdapter()..seedFile('x', '/f.bin', [1, 2, 3, 4, 5, 6]);
     final f = File('${dir.path}/f.bin')..writeAsBytesSync([1, 2, 3]);
     final sink = FileSink(f);
-    const job = TransferJob(
-      id: 'j',
-      accountId: 'x',
-      kind: TransferKind.download,
-      remoteId: '/f.bin',
-      localPath: '',
-      totalBytes: 6,
-      transferredBytes: 3,
-    );
+    const job = TransferJob(id: 'j', accountId: 'x', kind: TransferKind.download, remoteId: '/f.bin',
+        localPath: '', totalBytes: 6, transferredBytes: 3);
     await TransferRunner().download(adapter: a, job: job, sink: sink);
     await sink.close();
     expect(f.readAsBytesSync(), [1, 2, 3, 4, 5, 6]);

@@ -15,22 +15,14 @@ class NetworkState {
   final bool online;
   final bool metered;
   final bool wifi;
-  const NetworkState({
-    required this.online,
-    required this.metered,
-    required this.wifi,
-  });
+  const NetworkState({required this.online, required this.metered, required this.wifi});
 }
 
 class PowerState {
   final int batteryPercent; // 0..100
   final bool charging;
   final bool batterySaver;
-  const PowerState({
-    required this.batteryPercent,
-    required this.charging,
-    required this.batterySaver,
-  });
+  const PowerState({required this.batteryPercent, required this.charging, required this.batterySaver});
 }
 
 abstract class NetworkProbe {
@@ -73,6 +65,5 @@ class JsonSettings {
     }
   }
 
-  Future<void> save(Map<String, Object?> values) =>
-      store.write(key, _encode(values));
+  Future<void> save(Map<String, Object?> values) => store.write(key, _encode(values));
 }

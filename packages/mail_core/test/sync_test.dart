@@ -1,48 +1,29 @@
 import 'package:mail_core/mail_core.dart';
 import 'package:test/test.dart';
 
-HeaderInfo h(
-  int uid, {
-  String? mid,
-  String? irt,
-  List<String> refs = const [],
-}) => HeaderInfo(
-  uid: uid,
-  messageId: mid,
-  inReplyTo: irt,
-  references: refs,
-  subject: 's$uid',
-);
+HeaderInfo h(int uid, {String? mid, String? irt, List<String> refs = const []}) =>
+    HeaderInfo(uid: uid, messageId: mid, inReplyTo: irt, references: refs, subject: 's$uid');
 
 void main() {
   flagSyncTests();
-  test(
-    'first sync fetches everything in pages; second sync fetches only new',
-    () async {
-      final t = MemoryMailTransport(
-        capabilities: 'IMAP4rev1 CONDSTORE QRESYNC',
-      );
-      t.addFolder(
-        'INBOX',
-        uidValidity: 7,
-        messages: [for (var i = 1; i <= 5; i++) h(i)],
-      );
-      final store = MemoryMailStore();
-      final svc = MailSyncService(t, store);
+  test('first sync fetches everything in pages; second sync fetches only new', () async {
+    final t = MemoryMailTransport(capabilities: 'IMAP4rev1 CONDSTORE QRESYNC');
+    t.addFolder('INBOX', uidValidity: 7, messages: [for (var i = 1; i <= 5; i++) h(i)]);
+    final store = MemoryMailStore();
+    final svc = MailSyncService(t, store);
 
-      final r1 = await svc.syncFolder('a', 'INBOX', pageSize: 2);
-      expect(r1.fetched, 5);
-      expect(r1.fullResync, isTrue);
-      expect(r1.strategy, SyncStrategy.qresync);
-      expect((await store.folderState('a', 'INBOX'))!.lastSeenUid, 5);
+    final r1 = await svc.syncFolder('a', 'INBOX', pageSize: 2);
+    expect(r1.fetched, 5);
+    expect(r1.fullResync, isTrue);
+    expect(r1.strategy, SyncStrategy.qresync);
+    expect((await store.folderState('a', 'INBOX'))!.lastSeenUid, 5);
 
-      t.addMessage('INBOX', h(6));
-      final r2 = await svc.syncFolder('a', 'INBOX');
-      expect(r2.fetched, 1);
-      expect(r2.fullResync, isFalse);
-      expect((await store.headers('a', 'INBOX')).length, 6);
-    },
-  );
+    t.addMessage('INBOX', h(6));
+    final r2 = await svc.syncFolder('a', 'INBOX');
+    expect(r2.fetched, 1);
+    expect(r2.fullResync, isFalse);
+    expect((await store.headers('a', 'INBOX')).length, 6);
+  });
 
   test('UIDVALIDITY change wipes cache and refetches', () async {
     final t = MemoryMailTransport();
@@ -82,20 +63,13 @@ void main() {
 
   test('memory transport send is recorded', () async {
     final t = MemoryMailTransport();
-    await t.sendPlain(
-      fromName: 'A',
-      fromAddress: 'a@x.y',
-      to: ['b@x.y'],
-      subject: 's',
-      body: 'b',
-    );
+    await t.sendPlain(fromName: 'A', fromAddress: 'a@x.y', to: ['b@x.y'], subject: 's', body: 'b');
     expect(t.sent.single.subject, 's');
   });
 }
 
 void flagSyncTests() {
-  HeaderInfo hh(int uid, {Set<String> flags = const {}}) =>
-      HeaderInfo(uid: uid, subject: 's$uid', flags: flags);
+  HeaderInfo hh(int uid, {Set<String> flags = const {}}) => HeaderInfo(uid: uid, subject: 's$uid', flags: flags);
 
   Future<void> run(String caps) async {
     final t = MemoryMailTransport(capabilities: caps)
@@ -117,14 +91,8 @@ void flagSyncTests() {
     expect((await store.uids('a', 'INBOX')), {1, 2});
   }
 
-  test(
-    'flag changes and deletions propagate (CONDSTORE path)',
-    () => run('IMAP4rev1 CONDSTORE'),
-  );
-  test(
-    'flag changes and deletions propagate (plain uid-scan fallback)',
-    () => run('IMAP4rev1'),
-  );
+  test('flag changes and deletions propagate (CONDSTORE path)', () => run('IMAP4rev1 CONDSTORE'));
+  test('flag changes and deletions propagate (plain uid-scan fallback)', () => run('IMAP4rev1'));
 
   test('CONDSTORE only asks for CHANGED messages', () async {
     final t = MemoryMailTransport(capabilities: 'CONDSTORE')

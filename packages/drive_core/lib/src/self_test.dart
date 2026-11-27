@@ -11,42 +11,26 @@ class SelfTestStep {
 String _short(Object e) {
   if (e is ProviderHttpError) return 'HTTP ${e.statusCode}';
   if (e is UnsupportedOperation) return 'unsupported';
-  return e.runtimeType
-      .toString(); // never the message: it could contain names/URLs
+  return e.runtimeType.toString(); // never the message: it could contain names/URLs
 }
 
 /// Safe, self-cleaning check of a REAL account: everything happens inside one
 /// uniquely named temporary folder that is deleted at the end. Results contain no
 /// secrets or file names - they are meant to be pasted into a bug report.
-Future<List<SelfTestStep>> runAdapterSelfTest(
-  StorageAdapter a,
-  String accountId, {
-  String rootId = '/',
-}) async {
+Future<List<SelfTestStep>> runAdapterSelfTest(StorageAdapter a, String accountId, {String rootId = '/'}) async {
   final steps = <SelfTestStep>[];
-  Future<T?> step<T>(
-    String name,
-    Future<T> Function() f, {
-    bool optional = false,
-  }) async {
+  Future<T?> step<T>(String name, Future<T> Function() f, {bool optional = false}) async {
     try {
       final v = await f();
       steps.add(SelfTestStep(name, true));
       return v;
     } catch (e) {
-      steps.add(
-        SelfTestStep(
-          name,
-          false,
-          optional ? 'not available (${_short(e)})' : _short(e),
-        ),
-      );
+      steps.add(SelfTestStep(name, false, optional ? 'not available (${_short(e)})' : _short(e)));
       return null;
     }
   }
 
-  final folderName =
-      'aethryon_selftest_${DateTime.now().millisecondsSinceEpoch}';
+  final folderName = 'aethryon_selftest_${DateTime.now().millisecondsSinceEpoch}';
   final data = List<int>.generate(2048, (i) => i % 251);
   String? folderId;
 
@@ -58,10 +42,7 @@ Future<List<SelfTestStep>> runAdapterSelfTest(
 
   final fid = folderId;
   if (fid != null) {
-    final up = await step<RemoteNode>(
-      'upload 2 KB file',
-      () => a.upload(accountId, fid, 'a.bin', Stream.value(data), data.length),
-    );
+    final up = await step<RemoteNode>('upload 2 KB file', () => a.upload(accountId, fid, 'a.bin', Stream.value(data), data.length));
     await step<void>('list shows the file with the right size', () async {
       final l = await a.listChildren(accountId, fid);
       final f = l.items.firstWhere((n) => n.name == 'a.bin');
@@ -69,33 +50,21 @@ Future<List<SelfTestStep>> runAdapterSelfTest(
     });
     if (up != null) {
       await step<void>('download the whole file', () async {
-        final got = await a
-            .download(accountId, up.id)
-            .expand((e) => e)
-            .toList();
-        if (got.length != data.length || !_same(got, data))
-          throw StateError('content mismatch');
+        final got = await a.download(accountId, up.id).expand((e) => e).toList();
+        if (got.length != data.length || !_same(got, data)) throw StateError('content mismatch');
       });
       await step<void>('download a byte range', () async {
-        final got = await a
-            .download(accountId, up.id, start: 100, endInclusive: 199)
-            .expand((e) => e)
-            .toList();
-        if (!_same(got, data.sublist(100, 200)))
-          throw StateError('range mismatch');
+        final got = await a.download(accountId, up.id, start: 100, endInclusive: 199).expand((e) => e).toList();
+        if (!_same(got, data.sublist(100, 200))) throw StateError('range mismatch');
       }, optional: true);
       await step<void>('rename/move', () async {
         await a.move(accountId, up.id, fid, 'b.bin');
         final l = await a.listChildren(accountId, fid);
-        if (!l.items.any((n) => n.name == 'b.bin'))
-          throw StateError('not renamed');
+        if (!l.items.any((n) => n.name == 'b.bin')) throw StateError('not renamed');
       });
     }
     await step<void>('quota', () async => a.quota(accountId), optional: true);
-    await step<void>(
-      'clean up (delete the test folder)',
-      () => a.permanentDelete(accountId, fid),
-    );
+    await step<void>('clean up (delete the test folder)', () => a.permanentDelete(accountId, fid));
   }
   return steps;
 }
@@ -111,17 +80,9 @@ bool _same(List<int> a, List<int> b) {
 String formatSelfTest(String providerId, List<SelfTestStep> steps) {
   final b = StringBuffer('Aethryon self-test - provider: $providerId\n');
   for (final s in steps) {
-    b.writeln(
-      '${s.ok ? 'PASS' : 'FAIL'}  ${s.name}${s.detail.isEmpty ? '' : ' - ${s.detail}'}',
-    );
+    b.writeln('${s.ok ? 'PASS' : 'FAIL'}  ${s.name}${s.detail.isEmpty ? '' : ' - ${s.detail}'}');
   }
-  final failed = steps
-      .where((s) => !s.ok && !s.detail.startsWith('not available'))
-      .length;
-  b.write(
-    failed == 0
-        ? 'RESULT: all required steps passed'
-        : 'RESULT: $failed required step(s) failed',
-  );
+  final failed = steps.where((s) => !s.ok && !s.detail.startsWith('not available')).length;
+  b.write(failed == 0 ? 'RESULT: all required steps passed' : 'RESULT: $failed required step(s) failed');
   return b.toString();
 }

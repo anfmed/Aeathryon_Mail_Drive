@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:aethryon_platform/aethryon_platform.dart';
 import 'package:http/http.dart' as http;
 
@@ -9,10 +8,7 @@ class AppLinks {
   final String supportUrl;
   const AppLinks({required this.getInTouchUrl, required this.supportUrl});
   @override
-  bool operator ==(Object o) =>
-      o is AppLinks &&
-      o.getInTouchUrl == getInTouchUrl &&
-      o.supportUrl == supportUrl;
+  bool operator ==(Object o) => o is AppLinks && o.getInTouchUrl == getInTouchUrl && o.supportUrl == supportUrl;
   @override
   int get hashCode => Object.hash(getInTouchUrl, supportUrl);
 }
@@ -29,10 +25,7 @@ bool isSafeHttpsUrl(String? s) {
   final t = s.trim();
   if (t.isEmpty || t.length > 2048 || RegExp(r'\s').hasMatch(t)) return false;
   final u = Uri.tryParse(t);
-  return u != null &&
-      u.scheme == 'https' &&
-      u.host.isNotEmpty &&
-      u.userInfo.isEmpty;
+  return u != null && u.scheme == 'https' && u.host.isNotEmpty && u.userInfo.isEmpty;
 }
 
 String? _pick(Map<dynamic, dynamic> m, List<String> keys) {
@@ -58,16 +51,11 @@ AppLinks? mergeRemoteLinks(AppLinks current, Object? json) {
   String? g;
   String? s;
   for (final m in sources) {
-    g ??= _firstSafe(
-      _pick(m, const ['get_in_touch_url', 'getInTouchUrl', 'get_in_touch']),
-    );
+    g ??= _firstSafe(_pick(m, const ['get_in_touch_url', 'getInTouchUrl', 'get_in_touch']));
     s ??= _firstSafe(_pick(m, const ['support_url', 'supportUrl', 'support']));
   }
   if (g == null && s == null) return null;
-  return AppLinks(
-    getInTouchUrl: g ?? current.getInTouchUrl,
-    supportUrl: s ?? current.supportUrl,
-  );
+  return AppLinks(getInTouchUrl: g ?? current.getInTouchUrl, supportUrl: s ?? current.supportUrl);
 }
 
 String? _firstSafe(String? v) => isSafeHttpsUrl(v) ? v!.trim() : null;
@@ -81,8 +69,7 @@ class LinkConfigService {
   final DateTime Function() _now;
   final Duration ttl;
   final Duration timeout;
-  final StreamController<AppLinks> _changes =
-      StreamController<AppLinks>.broadcast();
+  final StreamController<AppLinks> _changes = StreamController<AppLinks>.broadcast();
   AppLinks _links = defaultLinks;
   DateTime? _fetchedAt;
 
@@ -93,9 +80,9 @@ class LinkConfigService {
     DateTime Function()? now,
     this.ttl = const Duration(hours: 6),
     this.timeout = const Duration(seconds: 10),
-  }) : _cache = cache,
-       _client = client,
-       _now = now ?? (() => DateTime.now().toUtc());
+  })  : _cache = cache,
+        _client = client,
+        _now = now ?? (() => DateTime.now().toUtc());
 
   AppLinks get links => _links;
   Stream<AppLinks> get changes => _changes.stream;
@@ -108,9 +95,7 @@ class LinkConfigService {
     final gs = g is String ? g : null; // a corrupted cache must never throw
     final ss = s is String ? s : null;
     _links = AppLinks(
-      getInTouchUrl: isSafeHttpsUrl(gs)
-          ? gs!.trim()
-          : defaultLinks.getInTouchUrl,
+      getInTouchUrl: isSafeHttpsUrl(gs) ? gs!.trim() : defaultLinks.getInTouchUrl,
       supportUrl: isSafeHttpsUrl(ss) ? ss!.trim() : defaultLinks.supportUrl,
     );
     final f = m['fetchedAt'];
@@ -121,21 +106,14 @@ class LinkConfigService {
   Future<bool> refresh({bool force = false}) async {
     if (baseUrl.isEmpty || !isSafeHttpsUrl(baseUrl)) return false;
     final last = _fetchedAt;
-    if (!force && last != null && _now().difference(last) < ttl)
-      return false; // avoid repeated requests
+    if (!force && last != null && _now().difference(last) < ttl) return false; // avoid repeated requests
     try {
       final b = baseUrl.trim();
       final uri = Uri.parse(b.endsWith('/') ? '${b}v1/links' : '$b/v1/links');
-      final resp = await _client
-          .get(uri, headers: const {'Accept': 'application/json'})
-          .timeout(timeout);
-      if (resp.statusCode != 200 || resp.bodyBytes.length > 64 * 1024)
-        return false;
+      final resp = await _client.get(uri, headers: const {'Accept': 'application/json'}).timeout(timeout);
+      if (resp.statusCode != 200 || resp.bodyBytes.length > 64 * 1024) return false;
       _fetchedAt = _now();
-      final merged = mergeRemoteLinks(
-        _links,
-        jsonDecode(utf8.decode(resp.bodyBytes)),
-      );
+      final merged = mergeRemoteLinks(_links, jsonDecode(utf8.decode(resp.bodyBytes)));
       if (merged == null) return false;
       final changed = merged != _links;
       _links = merged;

@@ -12,12 +12,10 @@ String explainError(Object e) {
     return 'The server answered with an error (HTTP ${e.statusCode}).';
   }
   if (e is OAuthError) {
-    if (e.code == 'reauth_required')
-      return 'Please sign in again for this account.';
+    if (e.code == 'reauth_required') return 'Please sign in again for this account.';
     if (e.code == 'access_denied') return 'Sign-in was cancelled.';
     return 'Sign-in failed (${e.code}).';
   }
-  if (e is RetryExhausted)
-    return 'The server did not respond. Check your connection and the address.';
+  if (e is RetryExhausted) return 'The server did not respond. Check your connection and the address.';
   return 'Could not reach the server.';
 }

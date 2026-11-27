@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:aethryon_net/aethryon_net.dart';
 import 'package:mail_core/mail_core.dart';
 import 'package:test/test.dart';
@@ -7,34 +6,18 @@ import 'package:test/test.dart';
 void main() {
   final now = DateTime.utc(2026, 1, 1);
   test('transient failure schedules retry in the future', () {
-    final r = onSendFailure(
-      const OutboxItem(id: '1', accountId: 'a'),
-      FailureKind.transient,
-      now,
-      random: Random(1),
-    );
+    final r = onSendFailure(const OutboxItem(id: '1', accountId: 'a'),
+        FailureKind.transient, now, random: Random(1));
     expect(r.state, OutboxState.failedRetryable);
     expect(r.nextAttemptUtc!.isAfter(now), isTrue);
     expect(dueItems([r], now), isEmpty);
     expect(dueItems([r], r.nextAttemptUtc!), hasLength(1));
   });
   test('permanent/auth failure is terminal', () {
-    expect(
-      onSendFailure(
-        const OutboxItem(id: '1', accountId: 'a'),
-        FailureKind.permanent,
-        now,
-      ).state,
-      OutboxState.failedPermanent,
-    );
-    expect(
-      onSendFailure(
-        const OutboxItem(id: '1', accountId: 'a'),
-        FailureKind.auth,
-        now,
-      ).state,
-      OutboxState.failedPermanent,
-    );
+    expect(onSendFailure(const OutboxItem(id: '1', accountId: 'a'), FailureKind.permanent, now).state,
+        OutboxState.failedPermanent);
+    expect(onSendFailure(const OutboxItem(id: '1', accountId: 'a'), FailureKind.auth, now).state,
+        OutboxState.failedPermanent);
   });
   test('attempt cap makes failure terminal', () {
     var it = const OutboxItem(id: '1', accountId: 'a');

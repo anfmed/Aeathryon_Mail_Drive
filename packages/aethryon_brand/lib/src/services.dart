@@ -8,12 +8,7 @@ class BrandServices {
   final UrlOpener opener;
   final AppInfo info;
   final FeedbackClient feedback;
-  const BrandServices({
-    required this.links,
-    required this.opener,
-    required this.info,
-    required this.feedback,
-  });
+  const BrandServices({required this.links, required this.opener, required this.info, required this.feedback});
 
   /// [ausBaseUrl] / [appId] normally come from `--dart-define=AUS_BASE_URL=…` / `AUS_APP_ID=…`
   /// (empty AUS url = links stay on defaults/cache and feedback reports "not set up").
@@ -25,20 +20,13 @@ class BrandServices {
     required String linksCacheKey,
     required String ausBaseUrl,
     required String appId,
-  }) => BrandServices(
-    links: LinkConfigService(
-      cache: JsonSettings(store, linksCacheKey),
-      client: httpClient,
-      baseUrl: ausBaseUrl,
-    ),
-    opener: opener,
-    info: info,
-    feedback: FeedbackClient(
-      baseUrl: ausBaseUrl,
-      appId: appId,
-      client: httpClient,
-    ),
-  );
+  }) =>
+      BrandServices(
+        links: LinkConfigService(cache: JsonSettings(store, linksCacheKey), client: httpClient, baseUrl: ausBaseUrl),
+        opener: opener,
+        info: info,
+        feedback: FeedbackClient(baseUrl: ausBaseUrl, appId: appId, client: httpClient),
+      );
 
   /// Background, failure-tolerant: cached links first, then one throttled refresh.
   Future<void> start() async {

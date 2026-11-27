@@ -9,13 +9,13 @@ class Space {
 
 /// Same language for both apps; each app passes its own seed colour.
 ThemeData buildAethryonTheme(Color seed, Brightness brightness) => ThemeData(
-  useMaterial3: true,
-  colorSchemeSeed: seed,
-  brightness: brightness,
-  visualDensity: VisualDensity.adaptivePlatformDensity,
-  // restrained motion: no fancy page transitions beyond platform defaults
-  listTileTheme: const ListTileThemeData(minVerticalPadding: 6),
-);
+      useMaterial3: true,
+      colorSchemeSeed: seed,
+      brightness: brightness,
+      visualDensity: VisualDensity.adaptivePlatformDensity,
+      // restrained motion: no fancy page transitions beyond platform defaults
+      listTileTheme: const ListTileThemeData(minVerticalPadding: 6),
+    );
 
 enum Tone { neutral, good, warn, bad }
 
@@ -37,14 +37,11 @@ class StatusBadge extends StatelessWidget {
     return Semantics(
       label: 'Status: $label',
       child: ExcludeSemantics(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: color),
-            const SizedBox(width: Space.xs),
-            Text(label, style: TextStyle(color: color)),
-          ],
-        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: Space.xs),
+          Text(label, style: TextStyle(color: color)),
+        ]),
       ),
     );
   }
@@ -58,9 +55,7 @@ class StartupTimer {
   static int? firstFrameMs;
   static void start() => _sw.start();
   static void install() {
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => firstFrameMs ??= _sw.elapsedMilliseconds,
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) => firstFrameMs ??= _sw.elapsedMilliseconds);
   }
 }
 
@@ -68,8 +63,7 @@ String diagnosticsText(String appName) {
   String mb(int b) => (b / (1024 * 1024)).toStringAsFixed(0);
   var rss = 'n/a';
   try {
-    rss =
-        'now ${mb(ProcessInfo.currentRss)} MB, peak ${mb(ProcessInfo.maxRss)} MB';
+    rss = 'now ${mb(ProcessInfo.currentRss)} MB, peak ${mb(ProcessInfo.maxRss)} MB';
   } catch (_) {}
   return '$appName diagnostics\n'
       'First frame (from main): ${StartupTimer.firstFrameMs ?? 'n/a'} ms\n'
@@ -91,28 +85,20 @@ class _DiagnosticsCardState extends State<DiagnosticsCard> {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(Space.l),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Diagnostics', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: Space.s),
-            SelectableText(text),
-            const SizedBox(height: Space.s),
-            Row(
-              children: [
-                OutlinedButton(
-                  onPressed: () => setState(() {}),
-                  child: const Text('Refresh'),
-                ),
-                const SizedBox(width: Space.s),
-                OutlinedButton(
-                  onPressed: () => Clipboard.setData(ClipboardData(text: text)),
-                  child: const Text('Copy'),
-                ),
-              ],
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Diagnostics', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: Space.s),
+          SelectableText(text),
+          const SizedBox(height: Space.s),
+          Row(children: [
+            OutlinedButton(onPressed: () => setState(() {}), child: const Text('Refresh')),
+            const SizedBox(width: Space.s),
+            OutlinedButton(
+              onPressed: () => Clipboard.setData(ClipboardData(text: text)),
+              child: const Text('Copy'),
             ),
-          ],
-        ),
+          ]),
+        ]),
       ),
     );
   }

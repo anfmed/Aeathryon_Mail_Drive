@@ -34,21 +34,18 @@ class TransferJob {
     this.attempts = 0,
   });
 
-  TransferJob copyWith({
-    TransferState? state,
-    int? transferredBytes,
-    int? attempts,
-  }) => TransferJob(
-    id: id,
-    accountId: accountId,
-    kind: kind,
-    remoteId: remoteId,
-    localPath: localPath,
-    totalBytes: totalBytes,
-    transferredBytes: transferredBytes ?? this.transferredBytes,
-    state: state ?? this.state,
-    attempts: attempts ?? this.attempts,
-  );
+  TransferJob copyWith({TransferState? state, int? transferredBytes, int? attempts}) =>
+      TransferJob(
+        id: id,
+        accountId: accountId,
+        kind: kind,
+        remoteId: remoteId,
+        localPath: localPath,
+        totalBytes: totalBytes,
+        transferredBytes: transferredBytes ?? this.transferredBytes,
+        state: state ?? this.state,
+        attempts: attempts ?? this.attempts,
+      );
 
   bool get isTerminal =>
       state == TransferState.completed ||
@@ -98,11 +95,9 @@ List<TransferJob> pickRunnable(
     perAccount[j.accountId] = (perAccount[j.accountId] ?? 0) + 1;
   }
   final waiting = jobs
-      .where(
-        (j) =>
-            j.state == TransferState.queued ||
-            j.state == TransferState.waitingForNetwork,
-      )
+      .where((j) =>
+          j.state == TransferState.queued ||
+          j.state == TransferState.waitingForNetwork)
       .toList();
 
   final byAccount = <String, List<TransferJob>>{};

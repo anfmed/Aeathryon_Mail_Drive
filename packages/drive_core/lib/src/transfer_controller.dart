@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:aethryon_platform/aethryon_platform.dart';
-
 import 'adapter.dart';
 import 'file_io.dart';
 import 'models.dart';
@@ -63,23 +61,15 @@ class TransferController {
       sink = FileSink(file);
       item.localPath = file.path;
       final job = TransferJob(
-        id: '${item.id}',
-        accountId: node.accountId,
-        kind: TransferKind.download,
-        remoteId: node.id,
-        localPath: file.path,
-        totalBytes: node.size ?? -1,
-      );
+          id: '${item.id}', accountId: node.accountId, kind: TransferKind.download, remoteId: node.id,
+          localPath: file.path, totalBytes: node.size ?? -1);
       await TransferRunner().download(
-        adapter: adapter,
-        job: job,
-        sink: sink,
-        onProgress: (d, t) {
-          item.done = d;
-          _notify();
-        },
-        isCancelled: () => item.cancelRequested,
-      );
+          adapter: adapter, job: job, sink: sink,
+          onProgress: (d, t) {
+            item.done = d;
+            _notify();
+          },
+          isCancelled: () => item.cancelRequested);
       await sink.close();
       item.status = TransferStatus.done;
     } on TransferCancelled {
@@ -97,20 +87,14 @@ class TransferController {
   Future<void> _discard(FileSink? sink, File? file) async {
     try {
       await sink?.close();
-      if (file != null && await file.exists())
-        await file.delete(); // never leave a half-written file
+      if (file != null && await file.exists()) await file.delete(); // never leave a half-written file
     } catch (_) {}
   }
 
   /// [resumableThreshold]: files larger than this use the adapter's resumable session
   /// (if it has one); smaller files use a single streamed request.
-  Future<TransferItem> upload(
-    StorageAdapter adapter,
-    String accountId,
-    String parentId,
-    PickedFile file, {
-    int resumableThreshold = 4 * 1024 * 1024,
-  }) async {
+  Future<TransferItem> upload(StorageAdapter adapter, String accountId, String parentId, PickedFile file,
+      {int resumableThreshold = 4 * 1024 * 1024}) async {
     final length = await file.length();
     final item = TransferItem(++_n, file.name, true, length);
     items.insert(0, item);
@@ -118,26 +102,16 @@ class TransferController {
     try {
       if (adapter is ResumableUploader && length > resumableThreshold) {
         await TransferRunner().upload(
-          uploader: adapter as ResumableUploader,
-          source: PickedFileSource(file),
-          accountId: accountId,
-          parentId: parentId,
-          name: file.name,
-          onProgress: (d, t) {
-            item.done = d;
-            _notify();
-          },
-          isCancelled: () => item.cancelRequested,
-        );
+            uploader: adapter as ResumableUploader, source: PickedFileSource(file),
+            accountId: accountId, parentId: parentId, name: file.name,
+            onProgress: (d, t) {
+              item.done = d;
+              _notify();
+            },
+            isCancelled: () => item.cancelRequested);
       } else {
         if (item.cancelRequested) throw TransferCancelled();
-        await adapter.upload(
-          accountId,
-          parentId,
-          file.name,
-          file.openRead(),
-          length,
-        );
+        await adapter.upload(accountId, parentId, file.name, file.openRead(), length);
         item.done = length;
       }
       item.status = TransferStatus.done;

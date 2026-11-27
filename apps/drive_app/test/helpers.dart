@@ -11,10 +11,8 @@ import 'package:http/testing.dart';
 class SeededStore implements SecureStore {
   final Map<String, String> m;
   SeededStore(this.m);
-  factory SeededStore.drive({bool welcomeDone = true}) => SeededStore({
-    if (welcomeDone)
-      'aethryon.drive.settings': jsonEncode({'welcomeDone': true}),
-  });
+  factory SeededStore.drive({bool welcomeDone = true}) =>
+      SeededStore({if (welcomeDone) 'aethryon.drive.settings': jsonEncode({'welcomeDone': true})});
   @override
   Future<String?> read(String key) async => m[key];
   @override
@@ -44,11 +42,7 @@ class FakeInfo implements AppInfo {
   Future<AppVersion> load() async => const AppVersion('1.2.3', '45');
 }
 
-DriveServices testServices({
-  SecureStore? store,
-  Future<DriveDb> Function()? openDb,
-  RecordingOpener? opener,
-}) {
+DriveServices testServices({SecureStore? store, Future<DriveDb> Function()? openDb, RecordingOpener? opener}) {
   final st = store ?? SeededStore.drive();
   final op = opener ?? RecordingOpener();
   final client = MockClient((_) async => http.Response('{}', 500));
@@ -59,13 +53,7 @@ DriveServices testServices({
     httpClient: client,
     openDb: openDb ?? () async => const DriveDb(problem: 'disabled in tests'),
     brand: BrandServices.create(
-      store: st,
-      opener: op,
-      httpClient: client,
-      info: FakeInfo(),
-      linksCacheKey: 'aethryon.drive.links',
-      ausBaseUrl: '',
-      appId: 'com.aethryon.drive_app',
-    ),
+        store: st, opener: op, httpClient: client, info: FakeInfo(),
+        linksCacheKey: 'aethryon.drive.links', ausBaseUrl: '', appId: 'com.aethryon.drive_app'),
   );
 }

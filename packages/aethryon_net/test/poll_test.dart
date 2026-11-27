@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:aethryon_net/aethryon_net.dart';
 import 'package:test/test.dart';
 
@@ -17,38 +16,35 @@ class FakeTimer implements Timer {
 }
 
 void main() {
-  test(
-    'schedules at the interval; failures back off; success resets',
-    () async {
-      final timers = <FakeTimer>[];
-      var fail = true;
-      final p = PollScheduler(
-        interval: const Duration(minutes: 5),
-        task: () async {
-          if (fail) throw StateError('x');
-        },
-        timerFactory: (d, cb) {
-          final t = FakeTimer(d, cb);
-          timers.add(t);
-          return t;
-        },
-      );
-      p.start();
-      expect(timers.last.d, const Duration(minutes: 5));
-      timers.last.cb();
-      await Future<void>.delayed(Duration.zero);
-      expect(p.failures, 1);
-      expect(timers.last.d, const Duration(minutes: 10));
-      timers.last.cb();
-      await Future<void>.delayed(Duration.zero);
-      expect(timers.last.d, const Duration(minutes: 20));
-      fail = false;
-      timers.last.cb();
-      await Future<void>.delayed(Duration.zero);
-      expect(p.failures, 0);
-      expect(timers.last.d, const Duration(minutes: 5));
-    },
-  );
+  test('schedules at the interval; failures back off; success resets', () async {
+    final timers = <FakeTimer>[];
+    var fail = true;
+    final p = PollScheduler(
+      interval: const Duration(minutes: 5),
+      task: () async {
+        if (fail) throw StateError('x');
+      },
+      timerFactory: (d, cb) {
+        final t = FakeTimer(d, cb);
+        timers.add(t);
+        return t;
+      },
+    );
+    p.start();
+    expect(timers.last.d, const Duration(minutes: 5));
+    timers.last.cb();
+    await Future<void>.delayed(Duration.zero);
+    expect(p.failures, 1);
+    expect(timers.last.d, const Duration(minutes: 10));
+    timers.last.cb();
+    await Future<void>.delayed(Duration.zero);
+    expect(timers.last.d, const Duration(minutes: 20));
+    fail = false;
+    timers.last.cb();
+    await Future<void>.delayed(Duration.zero);
+    expect(p.failures, 0);
+    expect(timers.last.d, const Duration(minutes: 5));
+  });
 
   test('backoff is capped; stop cancels and prevents further runs', () async {
     var runs = 0;

@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:aethryon_platform/aethryon_platform.dart';
 
 /// The database key lives ONLY in the OS secure store. The DB holds re-creatable
@@ -14,10 +13,7 @@ class DbKeyManager {
     final v = await store.read(_k);
     if (v != null && RegExp(r'^[0-9a-f]{64}$').hasMatch(v)) return v;
     final r = random ?? Random.secure();
-    final hex = List.generate(
-      32,
-      (_) => r.nextInt(256).toRadixString(16).padLeft(2, '0'),
-    ).join();
+    final hex = List.generate(32, (_) => r.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
     await store.write(_k, hex);
     return hex;
   }
